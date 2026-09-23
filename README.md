@@ -76,7 +76,7 @@ Sur Debian 13, avec `dpkg-dev` installé :
 sudo apt install ./target/dist/squoosh-desktop_*_amd64.deb
 ```
 
-AppImage portable, construite de préférence sur Debian 13 (la glibc de la machine de construction fixe la version minimale requise) :
+AppImage portable, construite de préférence sur Debian 13 (la glibc de la machine de construction fixe la version minimale requise). `appimagetool` a besoin de la commande `file` (`sudo apt install file`) :
 
 ```sh
 ./scripts/appimage.sh
