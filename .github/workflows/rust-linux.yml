@@ -1,0 +1,68 @@
+name: Rust Linux
+
+on:
+  push:
+    # Tags are built by release.yml, which calls this workflow.
+    branches: ['**']
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  debian-13:
+    runs-on: ubuntu-latest
+    container: debian:13-slim
+    steps:
+      - name: Installer les outils système
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl git build-essential pkg-config nasm dpkg-dev libwebp-dev libavif-dev liblcms2-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libx11-xcb-dev libxcb1-dev libegl1-mesa-dev libgl1-mesa-dev
+      - uses: actions/checkout@v4
+      - name: Installer Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.95.0 -c clippy,rustfmt
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Vérifier et tester
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          cargo test --workspace --locked
+      - name: Construire le paquet Debian
+        run: ./scripts/deb.sh
+      - name: Construire l’AppImage
+        run: ./scripts/appimage.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debian-13-amd64
+          path: target/dist/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appimage-x86_64
+          path: target/dist/*.AppImage
+
+  arch-linux:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Installer les outils système
+        run: pacman -Syu --noconfirm base-devel git rustup nasm libwebp libavif aom lcms2 libxkbcommon libxkbcommon-x11 wayland libx11 libxcb libglvnd
+      - uses: actions/checkout@v4
+      - name: Préparer le compte de construction
+        run: |
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- env HOME=/home/builder rustup default 1.95.0
+      - name: Construire la source complète et le paquet Arch
+        run: |
+          runuser -u builder -- env HOME=/home/builder ./scripts/source.sh
+          cd target/dist
+          runuser -u builder -- env HOME=/home/builder makepkg --cleanbuild --clean --noconfirm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch-linux-x86_64
+          path: |
+            target/dist/*.pkg.tar.zst
+            target/dist/*-source.tar.gz
+            target/dist/PKGBUILD

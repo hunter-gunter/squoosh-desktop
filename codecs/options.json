@@ -1,0 +1,490 @@
+{
+  "jpeg": [
+    {
+      "key": "quality",
+      "label": "Qualité",
+      "default": 75,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "baseline",
+      "label": "JPEG de base",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "arithmetic",
+      "label": "Codage arithmétique",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "progressive",
+      "label": "Progressif",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "optimize_coding",
+      "label": "Optimiser le codage",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "smoothing",
+      "label": "Lissage",
+      "default": 0,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "color_space",
+      "label": "Espace couleur",
+      "default": 3,
+      "min": 1,
+      "max": 3,
+      "choices": [
+        "Niveaux de gris",
+        "RGB",
+        "YCbCr"
+      ]
+    },
+    {
+      "key": "quant_table",
+      "label": "Table de quantification",
+      "default": 3,
+      "min": 0,
+      "max": 8,
+      "choices": [
+        "JPEG Annex K",
+        "Plate",
+        "MSSIM Kodak",
+        "ImageMagick",
+        "PSNR-HVS-M Kodak",
+        "Klein et al",
+        "Watson et al",
+        "Ahumada et al",
+        "Peterson et al"
+      ]
+    },
+    {
+      "key": "trellis_multipass",
+      "label": "Trellis multipasse",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "trellis_opt_zero",
+      "label": "Optimiser les zéros",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "trellis_opt_table",
+      "label": "Optimiser la table",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "trellis_loops",
+      "label": "Passes trellis",
+      "default": 1,
+      "min": 1,
+      "max": 50,
+      "choices": []
+    },
+    {
+      "key": "auto_subsample",
+      "label": "Sous-échantillonnage automatique",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "chroma_subsample",
+      "label": "Facteur chromatique",
+      "default": 2,
+      "min": 1,
+      "max": 4,
+      "choices": []
+    },
+    {
+      "key": "separate_chroma_quality",
+      "label": "Qualité chromatique distincte",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "chroma_quality",
+      "label": "Qualité chromatique",
+      "default": 75,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    }
+  ],
+  "png": [
+    {
+      "key": "level",
+      "label": "Niveau d’optimisation",
+      "default": 2,
+      "min": 0,
+      "max": 6,
+      "choices": []
+    },
+    {
+      "key": "interlace",
+      "label": "Entrelacement",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    }
+  ],
+  "webp": [
+    {
+      "key": "quality",
+      "label": "Qualité",
+      "default": 75,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "target_size",
+      "label": "Taille cible (octets)",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "choices": []
+    },
+    {
+      "key": "target_PSNR",
+      "label": "PSNR cible",
+      "default": 0,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "method",
+      "label": "Effort",
+      "default": 4,
+      "min": 0,
+      "max": 6,
+      "choices": []
+    },
+    {
+      "key": "sns_strength",
+      "label": "Mise en forme du bruit",
+      "default": 50,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "filter_strength",
+      "label": "Force du filtre",
+      "default": 60,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "filter_sharpness",
+      "label": "Netteté du filtre",
+      "default": 0,
+      "min": 0,
+      "max": 7,
+      "choices": []
+    },
+    {
+      "key": "filter_type",
+      "label": "Filtre fort",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "partitions",
+      "label": "Partitions",
+      "default": 0,
+      "min": 0,
+      "max": 3,
+      "choices": []
+    },
+    {
+      "key": "segments",
+      "label": "Segments",
+      "default": 4,
+      "min": 1,
+      "max": 4,
+      "choices": []
+    },
+    {
+      "key": "pass",
+      "label": "Passes",
+      "default": 1,
+      "min": 1,
+      "max": 10,
+      "choices": []
+    },
+    {
+      "key": "show_compressed",
+      "label": "Reconstruction compressée",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "preprocessing",
+      "label": "Prétraitement",
+      "default": 0,
+      "min": 0,
+      "max": 2,
+      "choices": [
+        "Aucun",
+        "Lissage des segments",
+        "Tramage pseudo-aléatoire"
+      ]
+    },
+    {
+      "key": "autofilter",
+      "label": "Filtre automatique",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "partition_limit",
+      "label": "Limite de partition",
+      "default": 0,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "alpha_compression",
+      "label": "Compresser l’alpha",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "alpha_filtering",
+      "label": "Filtrage alpha",
+      "default": 1,
+      "min": 0,
+      "max": 2,
+      "choices": []
+    },
+    {
+      "key": "alpha_quality",
+      "label": "Qualité alpha",
+      "default": 100,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "lossless",
+      "label": "Sans perte",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "exact",
+      "label": "Préserver les couleurs transparentes",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "image_hint",
+      "label": "Type d’image",
+      "default": 0,
+      "min": 0,
+      "max": 3,
+      "choices": [
+        "Défaut",
+        "Illustration",
+        "Photo",
+        "Graphique"
+      ]
+    },
+    {
+      "key": "emulate_jpeg_size",
+      "label": "Imiter la taille JPEG",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "thread_level",
+      "label": "Multithread",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "low_memory",
+      "label": "Mémoire réduite",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "near_lossless",
+      "label": "Fidélité presque sans perte",
+      "default": 100,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "use_delta_palette",
+      "label": "Palette delta (réservé par libwebp)",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "use_sharp_yuv",
+      "label": "Sharp YUV",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    }
+  ],
+  "avif": [
+    {
+      "key": "quality",
+      "label": "Qualité",
+      "default": 50,
+      "min": 0,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "qualityAlpha",
+      "label": "Qualité alpha (−1 : liée)",
+      "default": -1,
+      "min": -1,
+      "max": 100,
+      "choices": []
+    },
+    {
+      "key": "denoiseLevel",
+      "label": "Débruitage",
+      "default": 0,
+      "min": 0,
+      "max": 50,
+      "choices": []
+    },
+    {
+      "key": "tileColsLog2",
+      "label": "Colonnes de tuiles (log₂)",
+      "default": 0,
+      "min": 0,
+      "max": 6,
+      "choices": []
+    },
+    {
+      "key": "tileRowsLog2",
+      "label": "Lignes de tuiles (log₂)",
+      "default": 0,
+      "min": 0,
+      "max": 6,
+      "choices": []
+    },
+    {
+      "key": "speed",
+      "label": "Vitesse",
+      "default": 6,
+      "min": 0,
+      "max": 10,
+      "choices": []
+    },
+    {
+      "key": "subsample",
+      "label": "Sous-échantillonnage",
+      "default": 1,
+      "min": 0,
+      "max": 3,
+      "choices": [
+        "4:0:0",
+        "4:2:0",
+        "4:2:2",
+        "4:4:4"
+      ]
+    },
+    {
+      "key": "chromaDeltaQ",
+      "label": "Quantification chromatique distincte",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    },
+    {
+      "key": "sharpness",
+      "label": "Netteté",
+      "default": 0,
+      "min": 0,
+      "max": 7,
+      "choices": []
+    },
+    {
+      "key": "tune",
+      "label": "Optimisation",
+      "default": 0,
+      "min": 0,
+      "max": 2,
+      "choices": [
+        "Auto",
+        "PSNR",
+        "SSIM"
+      ]
+    },
+    {
+      "key": "enableSharpYUV",
+      "label": "Sharp YUV",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "choices": []
+    }
+  ]
+}

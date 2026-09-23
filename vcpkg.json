@@ -1,0 +1,25 @@
+{
+  "name": "squoosh-desktop",
+  "description": "Bibliothèques C de la version Windows, liées statiquement (triplet x64-windows-static). La version de vcpkg est fixée dans scripts/windows.ps1.",
+  "dependencies": [
+    {
+      "name": "libavif",
+      "default-features": false,
+      "features": [
+        "aom"
+      ]
+    },
+    {
+      "name": "libwebp",
+      "default-features": false,
+      "features": [
+        "nearlossless",
+        "simd"
+      ]
+    },
+    {
+      "name": "lcms",
+      "default-features": false
+    }
+  ]
+}

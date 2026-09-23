@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Squoosh Desktop
+GenericName=Image converter
+GenericName[fr]=Convertisseur d’images
+Comment=Compress and convert images locally, individually or in batches
+Comment[fr]=Compresser et convertir des images localement, seules ou par lots
+Exec=squoosh-desktop %F
+Icon=squoosh-desktop
+Terminal=false
+Categories=Graphics;RasterGraphics;
+MimeType=image/jpeg;image/png;image/webp;image/avif;image/svg+xml;image/gif;image/bmp;image/tiff;
+StartupNotify=true
+StartupWMClass=squoosh-desktop

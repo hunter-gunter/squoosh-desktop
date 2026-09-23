@@ -1,0 +1,3 @@
+# Static C runtime: the Windows executable needs no Visual C++ redistributable.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

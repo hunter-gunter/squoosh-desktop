@@ -1,0 +1,55 @@
+name: Release
+
+# Pousser un tag v<version de Cargo.toml> (ex. `git tag v0.2.0 && git push
+# origin v0.2.0`) construit tous les paquets et publie une Release GitHub.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier que le tag correspond à la version du projet
+        run: |
+          version=$(./scripts/version.sh)
+          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::Le tag $GITHUB_REF_NAME ne correspond pas à la version $version de Cargo.toml"
+            exit 1
+          fi
+
+  linux:
+    needs: version
+    uses: ./.github/workflows/rust-linux.yml
+
+  windows:
+    needs: version
+    uses: ./.github/workflows/rust-windows.yml
+
+  publish:
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Sommes de contrôle
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Publier la Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A tag such as v0.2.0-beta.1 is published as a pre-release.
+          prerelease=$(case "$GITHUB_REF_NAME" in *-*) echo --prerelease;; esac)
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Squoosh Desktop ${GITHUB_REF_NAME#v}" \
+            --generate-notes --verify-tag $prerelease

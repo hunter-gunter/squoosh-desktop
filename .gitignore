@@ -1,0 +1,11 @@
+/target/
+/packaging/pkg/
+/packaging/src/
+/packaging/*.pkg.tar.*
+.DS_Store
+/vcpkg_installed/
+Thumbs.db
+desktop.ini
+/.vscode/
+/.idea/
+*.swp

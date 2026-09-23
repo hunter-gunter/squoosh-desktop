@@ -1,0 +1,25 @@
+[package]
+name = "squoosh-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+squoosh-codecs = { path = "../codecs" }
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+image.workspace = true
+tempfile.workspace = true
+resvg = "0.48"
+resize = "0.8"
+rgb = "0.8"
+hqx = "0.1.1"
+imagequant = { version = "4.4", default-features = false }
+kamadak-exif = "0.6"
+crossbeam-channel = "0.5"
+dunce = "1"
+
+[dev-dependencies]
+lcms2 = "6"
