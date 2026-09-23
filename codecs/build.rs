@@ -31,7 +31,12 @@ fn main() {
     if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
         link_msvc_prefix(&mut build);
     } else {
-        for (lib, min) in [("libwebp", "1.2"), ("libavif", "1.2"), ("lcms2", "2.12")] {
+        for (lib, min) in [
+            ("libwebp", "1.2"),
+            ("libsharpyuv", "1.3"),
+            ("libavif", "1.2"),
+            ("lcms2", "2.12"),
+        ] {
             for path in pkg_config::Config::new()
                 .atleast_version(min)
                 .probe(lib)
@@ -54,6 +59,8 @@ fn link_msvc_prefix(build: &mut cc::Build) {
     // After MozJPEG's directories: the tree also holds libjpeg-turbo's
     // `jpeglib.h` (a libyuv dependency), which must not shadow MozJPEG's.
     build.include(prefix.join("include"));
+    // libsharpyuv's headers live under webp/, as its pkg-config file says.
+    build.include(prefix.join("include").join("webp"));
     println!("cargo:rustc-link-search=native={}", lib.display());
     // An explicit list: libjpeg-turbo is never linked, so every `jpeg_*`
     // symbol resolves to MozJPEG. libyuv's MJPEG path, the only user of
@@ -63,7 +70,7 @@ fn link_msvc_prefix(build: &mut cc::Build) {
         (&["aom"], true),
         (&["yuv"], false),
         (&["libwebp", "webp"], true),
-        (&["libsharpyuv", "sharpyuv"], false),
+        (&["libsharpyuv", "sharpyuv"], true),
         (&["lcms2", "liblcms2"], true),
     ] {
         match names.iter().find(|n| lib.join(format!("{n}.lib")).exists()) {

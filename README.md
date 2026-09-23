@@ -11,7 +11,7 @@ Rust **1.95 ou supérieur**, compilateur C, NASM et pkg-config sont nécessaires
 Debian 13 :
 
 ```sh
-sudo apt install build-essential pkg-config nasm libwebp-dev libavif-dev liblcms2-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libx11-xcb-dev libxcb1-dev libegl1-mesa-dev libgl1-mesa-dev xdg-desktop-portal xdg-desktop-portal-gtk
+sudo apt install build-essential pkg-config nasm libwebp-dev libsharpyuv-dev libavif-dev liblcms2-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libx11-xcb-dev libxcb1-dev libegl1-mesa-dev libgl1-mesa-dev xdg-desktop-portal xdg-desktop-portal-gtk
 ```
 
 Arch Linux :

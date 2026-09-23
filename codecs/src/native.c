@@ -9,6 +9,8 @@
 #include <webp/encode.h>
 #include <avif/avif.h>
 #include <lcms2.h>
+#include <sharpyuv/sharpyuv.h>
+#include <sharpyuv/sharpyuv_csp.h>
 #include "options.h"
 
 void sq_free(void *p) { free(p); }
@@ -104,6 +106,25 @@ int sq_webp(const uint8_t *pixels, uint32_t w, uint32_t h, const webp_options *o
     else snprintf(error,512,"Échec WebP (code %d)",pic.error_code);
     WebPPictureFree(&pic); WebPMemoryWriterClear(&writer); return ok;
 }
+// Sharp YUV through libsharpyuv directly: Debian's and vcpkg's libavif are
+// built without it and would return AVIF_RESULT_NOT_IMPLEMENTED.
+static avifResult sharp_yuv420(avifImage *image, const uint8_t *pixels, uint32_t w, uint32_t h) {
+    avifResult status=avifImageAllocatePlanes(image,AVIF_PLANES_ALL);
+    if (status!=AVIF_RESULT_OK) return status;
+    const SharpYuvConversionMatrix *matrix=SharpYuvGetConversionMatrix(kSharpYuvMatrixRec601Full);
+    if (!SharpYuvConvert(pixels,pixels+1,pixels+2,4,(int)w*4,8,
+                         image->yuvPlanes[AVIF_CHAN_Y],(int)image->yuvRowBytes[AVIF_CHAN_Y],
+                         image->yuvPlanes[AVIF_CHAN_U],(int)image->yuvRowBytes[AVIF_CHAN_U],
+                         image->yuvPlanes[AVIF_CHAN_V],(int)image->yuvRowBytes[AVIF_CHAN_V],
+                         8,(int)w,(int)h,matrix))
+        return AVIF_RESULT_OUT_OF_MEMORY;
+    for (uint32_t y=0; y<h; ++y) {
+        uint8_t *row=image->alphaPlane+(size_t)y*image->alphaRowBytes;
+        const uint8_t *src=pixels+(size_t)y*w*4+3;
+        for (uint32_t x=0; x<w; ++x) row[x]=src[(size_t)x*4];
+    }
+    return AVIF_RESULT_OK;
+}
 int sq_avif(const uint8_t *pixels, uint32_t w, uint32_t h, const avif_options *o,
             uint8_t **out, size_t *len, char *error) {
     const avifPixelFormat formats[]={AVIF_PIXEL_FORMAT_YUV400,AVIF_PIXEL_FORMAT_YUV420,AVIF_PIXEL_FORMAT_YUV422,AVIF_PIXEL_FORMAT_YUV444};
@@ -117,8 +138,10 @@ int sq_avif(const uint8_t *pixels, uint32_t w, uint32_t h, const avif_options *o
     image->transferCharacteristics=AVIF_TRANSFER_CHARACTERISTICS_SRGB;
     avifRGBImage rgb; avifRGBImageSetDefaults(&rgb,image);
     rgb.pixels=(uint8_t *)pixels; rgb.rowBytes=w*4;
-    if (o->enableSharpYUV) rgb.chromaDownsampling=AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
-    status=avifImageRGBToYUV(image,&rgb); if (status!=AVIF_RESULT_OK) goto codec_error;
+    // As in libavif, sharp YUV only applies to 4:2:0.
+    status=o->enableSharpYUV && image->yuvFormat==AVIF_PIXEL_FORMAT_YUV420
+        ? sharp_yuv420(image,pixels,w,h) : avifImageRGBToYUV(image,&rgb);
+    if (status!=AVIF_RESULT_OK) goto codec_error;
     encoder->codecChoice=AVIF_CODEC_CHOICE_AOM;
     encoder->quality=o->quality; encoder->qualityAlpha=o->qualityAlpha<0?o->quality:o->qualityAlpha;
     encoder->maxThreads=4; encoder->tileRowsLog2=o->tileRowsLog2; encoder->tileColsLog2=o->tileColsLog2; encoder->speed=o->speed;

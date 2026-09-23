@@ -9,9 +9,10 @@ pkgdesc='Éditeur et convertisseur d’images local en Rust, avec traitement par
 arch=('x86_64')
 license=('GPL-3.0-or-later')
 depends=('glibc' 'gcc-libs' 'libwebp' 'libavif' 'aom' 'lcms2' 'libxkbcommon' 'libxkbcommon-x11' 'libx11' 'libxcb' 'libglvnd' 'wayland')
-makedepends=('rust>=1.95' 'pkgconf' 'nasm' 'cmake')
+# cargo is provided by both rust and rustup; Cargo.toml enforces Rust 1.95.
+makedepends=('cargo' 'pkgconf' 'nasm')
 optdepends=('xdg-desktop-portal: native file dialogs' 'xdg-desktop-portal-gtk: file chooser portal for GTK desktops')
-options=('!lto') # Cargo applies its own ThinLTO; makepkg's linker-plugin LTO drops bundled C objects.
+options=('!lto' '!debug') # Cargo applies its own ThinLTO; makepkg's linker-plugin LTO drops bundled C objects.
 source=("$pkgname-$_version-source.tar.gz")
 sha256sums=('REPLACED_BY_SOURCE_SCRIPT')
 

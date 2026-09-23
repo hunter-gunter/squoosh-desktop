@@ -40,8 +40,15 @@ $exe = Join-Path $vcpkg 'vcpkg.exe'
 if (-not (Test-Path $exe)) {
     Invoke-Checked (Join-Path $vcpkg 'bootstrap-vcpkg.bat') @('-disableMetrics')
 }
+# vcpkg's CMake scripts call vcpkg back: keep them on this clone, not on a
+# preinstalled one (GitHub runners ship C:\vcpkg).
+$env:VCPKG_ROOT = (Resolve-Path $vcpkg).Path
+$env:VCPKG_DOWNLOADS = Join-Path $env:VCPKG_ROOT 'downloads'
 $installed = (Join-Path (Get-Location) 'vcpkg_installed')
-Invoke-Checked $exe @('install', "--vcpkg-root=$vcpkg", "--triplet=$triplet", "--x-install-root=$installed", '--disable-metrics')
+$arguments = @('install', "--vcpkg-root=$env:VCPKG_ROOT", "--triplet=$triplet", "--x-install-root=$installed", '--disable-metrics')
+# A second attempt absorbs transient tool download failures.
+& $exe @arguments
+if ($LASTEXITCODE -ne 0) { Invoke-Checked $exe $arguments }
 
 $prefix = Join-Path $installed $triplet
 $env:SQUOOSH_NATIVE_PREFIX = $prefix
