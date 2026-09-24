@@ -302,7 +302,7 @@ python3 site/build.py                # writes target/site/
 python3 -m http.server -d target/site
 ```
 
-`site/assets/og.png`, the social preview, is a capture of `site/assets/og.html` (the command is in the file).
+The screenshots are served as AVIF with a WebP fallback, in three widths: after changing one in `docs/screenshots/`, run `site/screenshots.sh` (ImageMagick and avifenc) to regenerate `site/assets/screenshots/`. `site/assets/og.png`, the social preview, is a capture of `site/assets/og.html` (the command is in the file).
 
 </details>
 

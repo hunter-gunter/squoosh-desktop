@@ -1,3 +1,18 @@
+/* Local fallbacks resized to the metrics of Unbounded and Onest, so that the page
+   does not move when the web fonts arrive (CLS). Ratios measured in Chromium. */
+@font-face { font-family: 'Unbounded Arial'; font-weight: 700 900; src: local('Arial Bold'), local('Arial-BoldMT'); size-adjust: 129.0%; ascent-override: 77.5%; descent-override: 19.4%; line-gap-override: 0%; }
+@font-face { font-family: 'Unbounded Roboto'; font-weight: 700 900; src: local('Roboto Black'), local('Roboto-Black'); size-adjust: 136.0%; ascent-override: 73.5%; descent-override: 18.4%; line-gap-override: 0%; }
+@font-face { font-family: 'Unbounded DejaVu'; font-weight: 700 900; src: local('DejaVu Sans Bold'), local('DejaVuSans-Bold'); size-adjust: 110.0%; ascent-override: 90.9%; descent-override: 22.7%; line-gap-override: 0%; }
+@font-face { font-family: 'Unbounded Noto'; font-weight: 700 900; src: local('Noto Sans Black'), local('NotoSans-Black'); size-adjust: 121.0%; ascent-override: 82.6%; descent-override: 20.7%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest Arial'; font-weight: 400 500; src: local('Arial'), local('ArialMT'); size-adjust: 103.4%; ascent-override: 93.8%; descent-override: 30.0%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest Roboto'; font-weight: 400 500; src: local('Roboto'), local('Roboto-Regular'); size-adjust: 105.2%; ascent-override: 92.2%; descent-override: 29.5%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest DejaVu'; font-weight: 400 500; src: local('DejaVu Sans'), local('DejaVuSans'); size-adjust: 93.1%; ascent-override: 104.2%; descent-override: 33.3%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest Noto'; font-weight: 400 500; src: local('Noto Sans'), local('NotoSans-Regular'); size-adjust: 100.3%; ascent-override: 96.7%; descent-override: 30.9%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest Arial'; font-weight: 600 700; src: local('Arial Bold'), local('Arial-BoldMT'); size-adjust: 100.1%; ascent-override: 96.9%; descent-override: 31.0%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest Roboto'; font-weight: 600 700; src: local('Roboto Bold'), local('Roboto-Bold'); size-adjust: 107.1%; ascent-override: 90.6%; descent-override: 28.9%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest DejaVu'; font-weight: 600 700; src: local('DejaVu Sans Bold'), local('DejaVuSans-Bold'); size-adjust: 85.4%; ascent-override: 113.6%; descent-override: 36.3%; line-gap-override: 0%; }
+@font-face { font-family: 'Onest Noto'; font-weight: 600 700; src: local('Noto Sans Bold'), local('NotoSans-Bold'); size-adjust: 98.2%; ascent-override: 98.8%; descent-override: 31.6%; line-gap-override: 0%; }
+
 :root {
   --ink: #0d0d0d;
   --paper: #fff5e1;
@@ -10,8 +25,8 @@
   --rust: #f74c00;
   --line: 3px solid var(--ink);
   --shadow: 6px 6px 0 var(--ink);
-  --display: 'Unbounded', 'Arial Black', system-ui, sans-serif;
-  --text: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'Unbounded', 'Unbounded Arial', 'Unbounded Roboto', 'Unbounded DejaVu', 'Unbounded Noto', sans-serif;
+  --text: 'Onest', 'Onest Arial', 'Onest Roboto', 'Onest DejaVu', 'Onest Noto', sans-serif;
   color-scheme: light;
 }
 :lang(ja) { --cjk: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', 'Noto Sans JP'; }
@@ -19,8 +34,8 @@
 :lang(zh-CN) { --cjk: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC'; }
 :lang(zh-TW) { --cjk: 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans CJK TC', 'Noto Sans TC'; }
 :lang(ja), :lang(ko), :lang(zh-CN), :lang(zh-TW) {
-  --display: 'Unbounded', var(--cjk), system-ui, sans-serif;
-  --text: 'Onest', var(--cjk), system-ui, sans-serif;
+  --display: 'Unbounded', 'Unbounded Arial', 'Unbounded Roboto', 'Unbounded DejaVu', 'Unbounded Noto', var(--cjk), sans-serif;
+  --text: 'Onest', 'Onest Arial', 'Onest Roboto', 'Onest DejaVu', 'Onest Noto', var(--cjk), sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -83,7 +98,7 @@ h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 900; margin-bottom: 1.7
   align-items: center; gap: clamp(2rem, 5vw, 4.5rem);
   padding-block: clamp(1.5rem, 5vw, 4rem) clamp(3rem, 7vw, 5.5rem);
 }
-h1 .brand { display: block; font-size: clamp(2.6rem, 6.4vw, 4.9rem); font-weight: 900; }
+h1 .brand { display: block; width: min-content; font-size: clamp(2.6rem, 6.4vw, 4.9rem); font-weight: 900; }
 h1 .sub {
   display: inline-block; margin-top: .9rem; padding: .3rem .7rem;
   background: var(--pink); border: var(--line); box-shadow: 4px 4px 0 var(--ink);

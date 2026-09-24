@@ -33,6 +33,11 @@ CJK = {"zh-CN", "zh-TW", "ja", "ko"}
 CODECS = ["Rust", "MozJPEG", "OxiPNG", "WebP", "AVIF", "Lanczos3", "Mitchell", "Catmull-Rom",
           "HQX", "Dithering", "Lossless", "Batch"]
 
+# Screenshot widths made by site/screenshots.sh, and the width each one takes on the page.
+WIDTHS = (740, 1110, 1480)
+HERO_SIZES = "(max-width: 960px) calc(100vw - 38px), min(620px, 52vw)"
+SHOT_SIZES = "(max-width: 640px) calc(100vw - 38px), (max-width: 1192px) calc(50vw - 38px), 560px"
+
 ICON_DOWNLOAD = ('<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" '
                  'stroke-width="3" stroke-linecap="square" d="M12 3v12m-6-6 6 6 6-6M4 21h16"/></svg>')
 ICON_GITHUB = ('<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 '
@@ -50,6 +55,18 @@ def icon(name, cls="os"):
     """Inline logo from site/icons/ (Simple Icons, CC0)."""
     path = re.search(r' d="([^"]+)"', (SITE / "icons" / f"{name}.svg").read_text("utf-8")).group(1)
     return f'<svg class="{cls}" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="{path}"/></svg>'
+
+
+def srcset(prefix, name, ext):
+    return ", ".join(f"{prefix}assets/screenshots/{name}-{w}.{ext} {w}w" for w in WIDTHS)
+
+
+def picture(prefix, name, alt, sizes, hero=False):
+    """AVIF with a WebP fallback, in every width of WIDTHS."""
+    loading = 'fetchpriority="high"' if hero else 'loading="lazy" decoding="async"'
+    return (f'<picture><source type="image/avif" srcset="{srcset(prefix, name, "avif")}" sizes="{sizes}">'
+            f'<img src="{prefix}assets/screenshots/{name}-{WIDTHS[-1]}.webp" srcset="{srcset(prefix, name, "webp")}" '
+            f'sizes="{sizes}" width="1480" height="920" {loading} alt="{e(alt)}"></picture>')
 
 
 def load_locales():
@@ -79,9 +96,12 @@ def e(text):
 def styles(prefix):
     css = (SITE / "assets" / "fonts.css").read_text("utf-8") + (SITE / "assets" / "style.css").read_text("utf-8")
     css = css.replace("url(fonts/", f"url({prefix}assets/fonts/")
-    # Light minification: comments, indentation and blank lines.
+    # Minification: comments, then whitespace around punctuation (never around
+    # "-" or "+", which calc() needs).
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
-    return re.sub(r"\n\s*", "\n", css).strip()
+    css = re.sub(r"\s+", " ", css)
+    css = re.sub(r" ?([{}:;,>]) ?", r"\1", css)
+    return css.replace(";}", "}").strip()
 
 
 def downloads(version):
@@ -101,6 +121,7 @@ def json_ld(t, code, locales, version, base_url, dl):
     app = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
+        "@id": page + "#app",
         "name": "Squoosh Desktop",
         "alternateName": "Squoosh for Windows and Linux",
         "description": t["description"],
@@ -113,7 +134,7 @@ def json_ld(t, code, locales, version, base_url, dl):
         "downloadUrl": dl["releases"],
         "installUrl": dl["releases"],
         "image": base_url + "assets/icon-512.png",
-        "screenshot": [base_url + f"assets/screenshots/{name}.webp" for name in ("editor", "welcome", "batch")],
+        "screenshot": [base_url + f"assets/screenshots/{name}-{WIDTHS[-1]}.webp" for name in ("editor", "welcome", "batch")],
         "featureList": [t[f"f{i}_title"] + ": " + t[f"f{i}_text"] for i in range(1, 5)]
                        + [t[f"r{i}_title"] + ": " + t[f"r{i}_text"] for i in range(1, 5)],
         "keywords": "Squoosh, Rust, image compressor, AVIF, WebP, MozJPEG, OxiPNG, offline, batch",
@@ -124,6 +145,18 @@ def json_ld(t, code, locales, version, base_url, dl):
         "sameAs": [REPO],
         "isBasedOn": {"@type": "SoftwareApplication", "name": "Squoosh", "url": "https://squoosh.app"},
     }
+    # Declares the language the app is written in, which SoftwareApplication cannot.
+    source = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": "Squoosh Desktop",
+        "description": t["rust_intro"],
+        "codeRepository": REPO,
+        "programmingLanguage": {"@type": "ComputerLanguage", "name": "Rust", "url": "https://www.rust-lang.org"},
+        "runtimePlatform": ["Windows", "Linux"],
+        "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+        "targetProduct": {"@id": page + "#app"},
+    }
     faq = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
@@ -133,7 +166,7 @@ def json_ld(t, code, locales, version, base_url, dl):
     }
     return "\n".join(
         '<script type="application/ld+json">' + json.dumps(data, ensure_ascii=False).replace("</", "<\\/") + "</script>"
-        for data in (app, faq))
+        for data in (app, source, faq))
 
 
 def render(code, locales, version, base_url):
@@ -197,7 +230,7 @@ def render(code, locales, version, base_url):
 {og_alternates}
 <meta name="twitter:card" content="summary_large_image">
 {preloads}
-<link rel="preload" href="{prefix}assets/screenshots/editor.webp" as="image" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" imagesrcset="{srcset(prefix, "editor", "avif")}" imagesizes="{HERO_SIZES}" fetchpriority="high">
 <style>
 {styles(prefix)}
 </style>
@@ -238,7 +271,7 @@ def render(code, locales, version, base_url):
     </div>
     <div class="shot">
       <div class="window">
-        <img src="{prefix}assets/screenshots/editor.webp" width="1480" height="920" alt="{e(t["hero_alt"])}" fetchpriority="high">
+        {picture(prefix, "editor", t["hero_alt"], HERO_SIZES, hero=True)}
       </div>
       <a class="rust-sticker" href="#rust"><span>{icon("rust")}{e(t["rust_badge"])}</span></a>
     </div>
@@ -272,11 +305,11 @@ def render(code, locales, version, base_url):
     <h2 id="screenshots">{e(t["shots_title"])}</h2>
     <div class="shots">
       <figure>
-        <img src="{prefix}assets/screenshots/welcome.webp" width="1480" height="920" loading="lazy" decoding="async" alt="{e(t["welcome_alt"])}">
+        {picture(prefix, "welcome", t["welcome_alt"], SHOT_SIZES)}
         <figcaption>{e(t["welcome_caption"])}</figcaption>
       </figure>
       <figure>
-        <img src="{prefix}assets/screenshots/batch.webp" width="1480" height="920" loading="lazy" decoding="async" alt="{e(t["batch_alt"])}">
+        {picture(prefix, "batch", t["batch_alt"], SHOT_SIZES)}
         <figcaption>{e(t["batch_caption"])}</figcaption>
       </figure>
     </div>
@@ -373,7 +406,6 @@ def main():
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(SITE / "assets", out / "assets", ignore=shutil.ignore_patterns("*.css", "og.html"))
-    shutil.copytree(ROOT / "docs" / "screenshots", out / "assets" / "screenshots")
     # Files served as is at the site root, e.g. search engine verification files.
     shutil.copytree(SITE / "static", out, dirs_exist_ok=True)
     for code in LANGS:
