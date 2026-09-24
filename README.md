@@ -5,7 +5,8 @@
 # Squoosh Desktop
 
 **Compress, compare and batch-convert images, entirely offline.**<br>
-A native Rust port of [Squoosh](https://github.com/GoogleChromeLabs/squoosh) for Linux and Windows.
+A native Rust port of [Squoosh](https://github.com/GoogleChromeLabs/squoosh) for Linux and Windows.<br>
+**[hunter-gunter.github.io/squoosh-desktop](https://hunter-gunter.github.io/squoosh-desktop/)**
 
 [![Linux CI](https://img.shields.io/github/actions/workflow/status/hunter-gunter/squoosh-desktop/rust-linux.yml?branch=main&label=Linux%20CI&logo=linux&logoColor=white)](https://github.com/hunter-gunter/squoosh-desktop/actions/workflows/rust-linux.yml)
 [![Windows CI](https://img.shields.io/github/actions/workflow/status/hunter-gunter/squoosh-desktop/rust-windows.yml?branch=main&label=Windows%20CI&logo=windows&logoColor=white)](https://github.com/hunter-gunter/squoosh-desktop/actions/workflows/rust-windows.yml)
@@ -291,6 +292,20 @@ SQUOOSH_LANG=en SQUOOSH_CAPTURE=editor.png target/release/squoosh-desktop macaw.
 
 </details>
 
+<details>
+<summary><b>Website</b></summary>
+
+The website is a single static page per language, generated from [`site/`](site) with the Python standard library only. The texts live in `site/locales/<code>.json`, one file per app language, with the same keys as `en.json`. The [Website workflow](.github/workflows/pages.yml) publishes it on GitHub Pages on every change and after every release, with download links to the latest release.
+
+```sh
+python3 site/build.py                # writes target/site/
+python3 -m http.server -d target/site
+```
+
+`site/assets/og.png`, the social preview, is a capture of `site/assets/og.html` (the command is in the file).
+
+</details>
+
 ### Repository layout
 
 | Folder | Contents |
@@ -301,6 +316,7 @@ SQUOOSH_LANG=en SQUOOSH_CAPTURE=editor.png target/release/squoosh-desktop macaw.
 | [`i18n/`](i18n) | Languages, translation catalogs (`locales/`) and helpers shared by every crate |
 | [`packaging/`](packaging), [`scripts/`](scripts) | Arch recipe, `.desktop` file, Windows installer, package and AppImage builds |
 | [`docs/`](docs) | Settings mapping with Squoosh, and screenshots |
+| [`site/`](site) | Website generator, texts in 17 languages and assets |
 
 ## License
 

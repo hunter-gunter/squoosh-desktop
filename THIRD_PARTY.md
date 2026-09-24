@@ -41,3 +41,9 @@ The photos shown in `docs/screenshots/` come from Wikimedia Commons and are not 
 | [USA Antelope-Canyon](https://commons.wikimedia.org/wiki/File:USA_Antelope-Canyon.jpg) | Lucas Löffler | Public domain |
 | [Colorful thermophiles at Grand Prismatic Spring](https://commons.wikimedia.org/wiki/File:Colorful_thermophiles_at_Grand_Prismatic_Spring_(33669630821).jpg) | NPS / Neal Herbert | Public domain |
 | [Grand Prismatic Spring and boardwalk](https://commons.wikimedia.org/wiki/File:Grand_Prismatic_Spring_and_boardwalk.jpg) | NPS / Jacob W. Frank | Public domain |
+
+## Website
+
+The website in `site/` embeds the [Unbounded](https://github.com/googlefonts/unbounded) and [Onest](https://github.com/simpals/onest) fonts (`site/assets/fonts/`), both under the SIL Open Font License 1.1. They are served from the site itself, so visitors' browsers never contact a third-party font service.
+
+The Rust, Linux (Tux), Debian and Arch Linux logos in `site/icons/` come from [Simple Icons](https://simpleicons.org), CC0 1.0; they remain trademarks of their respective owners.

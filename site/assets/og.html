@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Source of og.png, the 1200x630 social preview. Regenerate from site/assets with:
+     chromium --headless=new --hide-scrollbars --window-size=1200,630 --screenshot=og.png og.html -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Squoosh Desktop</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  body { margin: 0; width: 1200px; height: 630px; overflow: hidden; position: relative;
+    background: #fff5e1 linear-gradient(rgb(13 13 13 / .07) 1px, transparent 1px) 0 0 / 40px 40px;
+    font-family: 'Onest', sans-serif; color: #0d0d0d; }
+  body::before { content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgb(13 13 13 / .07) 1px, transparent 1px) 0 0 / 40px 40px; }
+  .text { position: absolute; left: 64px; top: 48px; width: 540px; }
+  .logo { width: 96px; height: 96px; border: 4px solid #0d0d0d; box-shadow: 6px 6px 0 #0d0d0d; background: #3f3f3e; }
+  h1 { font: 900 68px/1 'Unbounded', sans-serif; margin: 28px 0 24px; letter-spacing: -.01em; }
+  .sub { display: inline-block; background: #ff3d8b; border: 4px solid #0d0d0d; box-shadow: 6px 6px 0 #0d0d0d;
+    padding: 8px 16px; font: 800 26px 'Unbounded', sans-serif; white-space: nowrap; transform: rotate(-2deg); }
+  .os { margin: 30px 0 0; font-weight: 700; font-size: 26px; }
+  .shot { position: absolute; left: 640px; top: 70px; width: 640px; border: 4px solid #0d0d0d;
+    box-shadow: 14px 14px 0 #0d0d0d; background: #0d0d0d; }
+  .shot::before { content: ''; display: block; height: 30px; border-bottom: 4px solid #0d0d0d; background: #fffdf8; }
+  .shot img { display: block; width: 100%; }
+  .band { position: absolute; left: -40px; right: -40px; bottom: 26px; background: #0d0d0d; color: #ffd23f;
+    font: 900 26px 'Unbounded', sans-serif; padding: 12px 60px; transform: rotate(-2deg); word-spacing: 14px; white-space: nowrap; }
+  .band b { color: #ff3d8b; }
+</style>
+</head>
+<body>
+  <div class="text">
+    <img class="logo" src="icon-192.png" alt="">
+    <h1>Squoosh Desktop</h1>
+    <span class="sub">Compress images offline.</span>
+    <p class="os">Free · Open source · Windows &amp; Linux</p>
+  </div>
+  <div class="shot"><img src="../../docs/screenshots/editor.webp" alt=""></div>
+  <div class="band">MozJPEG <b>✦</b> OxiPNG <b>✦</b> WebP <b>✦</b> AVIF <b>✦</b> Batch <b>✦</b> 17 languages <b>✦</b> MozJPEG</div>
+</body>
+</html>
