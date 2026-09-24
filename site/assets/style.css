@@ -70,11 +70,11 @@ h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 900; margin-bottom: 1.7
 .lang[open] summary { background: var(--yellow); }
 .lang ul {
   position: absolute; right: 0; top: calc(100% + 10px); z-index: 5;
-  display: grid; grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
+  display: grid; grid-template-columns: repeat(2, max-content); max-width: calc(100vw - 32px);
   margin: 0; padding: .4rem; list-style: none;
   background: var(--white); border: var(--line); box-shadow: var(--shadow);
 }
-.lang li a { display: block; padding: .4rem .6rem; text-decoration: none; font-weight: 600; }
+.lang li a { display: block; padding: .4rem .7rem; text-decoration: none; font-weight: 600; white-space: nowrap; }
 .lang li a:hover, .lang li a[aria-current] { background: var(--yellow); }
 
 /* Hero */
@@ -230,5 +230,8 @@ footer a:hover { color: var(--yellow); }
   .rust-sticker svg { width: 34px; height: 34px; }
   .cards li:nth-child(even) { transform: none; }
   .window { box-shadow: 7px 7px 0 var(--ink); }
-  .lang ul { grid-template-columns: 1fr 1fr; right: -4px; }
+  .nav, .top { position: relative; }
+  .lang { position: static; }
+  .lang ul { right: 0; }
+  .lang li a { padding: .4rem .5rem; font-size: .92rem; }
 }
