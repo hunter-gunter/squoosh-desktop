@@ -374,6 +374,8 @@ def main():
         shutil.rmtree(out)
     shutil.copytree(SITE / "assets", out / "assets", ignore=shutil.ignore_patterns("*.css", "og.html"))
     shutil.copytree(ROOT / "docs" / "screenshots", out / "assets" / "screenshots")
+    # Files served as is at the site root, e.g. search engine verification files.
+    shutil.copytree(SITE / "static", out, dirs_exist_ok=True)
     for code in LANGS:
         target = out / slug(code) / "index.html"
         target.parent.mkdir(parents=True, exist_ok=True)

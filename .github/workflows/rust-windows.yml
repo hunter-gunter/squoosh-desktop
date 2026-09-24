@@ -4,7 +4,18 @@ on:
   push:
     # Tags are built by release.yml, which calls this workflow.
     branches: ['**']
+    # The website and the documentation do not affect the app.
+    paths-ignore:
+      - 'site/**'
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/pages.yml'
   pull_request:
+    paths-ignore:
+      - 'site/**'
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/pages.yml'
   workflow_call:
 
 permissions:
