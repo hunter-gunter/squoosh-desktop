@@ -1,15 +1,15 @@
-﻿; Installeur Windows, construit par scripts/windows.ps1 :
-;   ISCC /DAppVersion=<version> /DStage=<dossier préparé> squoosh-desktop.iss
-; Installation par utilisateur sans droits administrateur (ce qui garde aussi
-; le glisser-déposer depuis l'Explorateur, bloqué vers un processus élevé).
-; Les formats d'image sont proposés dans « Ouvrir avec » sans remplacer
-; l'application par défaut de l'utilisateur.
+﻿; Windows installer, built by scripts/windows.ps1:
+;   ISCC /DAppVersion=<version> /DStage=<staged folder> squoosh-desktop.iss
+; Per-user installation without administrator rights (which also keeps
+; drag and drop from Explorer working, as it is blocked to elevated processes).
+; The image formats are offered in "Open with" without replacing the
+; user's default application.
 
 #ifndef AppVersion
-  #error Définir AppVersion
+  #error Define AppVersion
 #endif
 #ifndef Stage
-  #error Définir Stage
+  #error Define Stage
 #endif
 
 [Setup]
@@ -37,8 +37,19 @@ ChangesAssociations=yes
 CloseApplications=yes
 
 [Languages]
-Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+; Every language of the application that Inno Setup ships a translation for.
 Name: "en"; MessagesFile: "compiler:Default.isl"
+Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+Name: "de"; MessagesFile: "compiler:Languages\German.isl"
+Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
+Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+Name: "nl"; MessagesFile: "compiler:Languages\Dutch.isl"
+Name: "pl"; MessagesFile: "compiler:Languages\Polish.isl"
+Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
+Name: "uk"; MessagesFile: "compiler:Languages\Ukrainian.isl"
+Name: "tr"; MessagesFile: "compiler:Languages\Turkish.isl"
+Name: "ja"; MessagesFile: "compiler:Languages\Japanese.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -56,7 +67,7 @@ Name: "{group}\Squoosh Desktop"; Filename: "{app}\squoosh-desktop.exe"
 Name: "{autodesktop}\Squoosh Desktop"; Filename: "{app}\squoosh-desktop.exe"; Tasks: desktopicon
 
 [Registry]
-; ProgID and application registration used by « Ouvrir avec ».
+; ProgID and application registration used by "Open with".
 Root: HKA; Subkey: "Software\Classes\SquooshDesktop.Image"; ValueType: string; ValueData: "Image (Squoosh Desktop)"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\SquooshDesktop.Image\DefaultIcon"; ValueType: string; ValueData: """{app}\squoosh-desktop.exe"",0"
 Root: HKA; Subkey: "Software\Classes\SquooshDesktop.Image\shell\open\command"; ValueType: string; ValueData: """{app}\squoosh-desktop.exe"" ""%1"""

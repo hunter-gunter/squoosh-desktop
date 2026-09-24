@@ -3,6 +3,7 @@ use anyhow::{Context, Result, ensure};
 use image::{DynamicImage, ImageDecoder, ImageReader, RgbaImage};
 use rgb::{FromSlice, RGBA};
 use squoosh_codecs::{Format, checked_dimensions};
+use squoosh_i18n::{t, tr};
 use std::{
     fs,
     io::Cursor,
@@ -22,8 +23,17 @@ pub struct Converted {
     pub format: Format,
 }
 pub const MAX_FILE_BYTES: u64 = 512 * 1024 * 1024;
+fn too_large() -> &'static str {
+    t("File larger than 512 MiB")
+}
+fn first_frame_only(kind: &str) -> String {
+    tr!(
+        "{kind}: only the first frame will be converted",
+        kind = kind
+    )
+}
 pub fn check_cancel(cancel: &AtomicBool) -> Result<()> {
-    ensure!(!cancel.load(Ordering::Relaxed), "Annulé");
+    ensure!(!cancel.load(Ordering::Relaxed), t("Cancelled"));
     Ok(())
 }
 pub fn supported(path: &Path) -> bool {
@@ -72,17 +82,13 @@ fn render_svg(bytes: &[u8], dimensions: Option<(u32, u32)>, crop: bool) -> Resul
     RgbaImage::from_raw(w, h, raw).context("Pixels SVG invalides")
 }
 pub fn load(path: &Path) -> Result<Source> {
-    let file =
-        fs::File::open(path).with_context(|| format!("Impossible d’ouvrir {}", path.display()))?;
+    let file = fs::File::open(path).with_context(|| tr!("Cannot open {}", path.display()))?;
     let len = file.metadata()?.len();
-    ensure!(len <= MAX_FILE_BYTES, "Fichier supérieur à 512 Mio");
+    ensure!(len <= MAX_FILE_BYTES, too_large());
     use std::io::Read;
     let mut bytes = Vec::new();
     file.take(MAX_FILE_BYTES + 1).read_to_end(&mut bytes)?;
-    ensure!(
-        bytes.len() as u64 <= MAX_FILE_BYTES,
-        "Fichier supérieur à 512 Mio"
-    );
+    ensure!(bytes.len() as u64 <= MAX_FILE_BYTES, too_large());
     let ext = path
         .extension()
         .and_then(|s| s.to_str())
@@ -96,13 +102,13 @@ pub fn load(path: &Path) -> Result<Source> {
             svg: Some(bytes),
         });
     }
-    let guessed = image::guess_format(&bytes).context("Format d’image non reconnu")?;
+    let guessed = image::guess_format(&bytes).context(t("Unrecognized image format"))?;
     if guessed == image::ImageFormat::Avif {
         let (image, animated) = squoosh_codecs::decode_avif(&bytes)?;
         return Ok(Source {
             image,
             bytes: bytes.len() as u64,
-            warning: animated.then(|| "Animation : seule la première image sera convertie".into()),
+            warning: animated.then(|| first_frame_only("Animation")),
             svg: None,
         });
     }
@@ -143,11 +149,11 @@ pub fn load(path: &Path) -> Result<Source> {
         squoosh_codecs::apply_icc(&mut image, &icc)?;
     }
     let warning = match guessed {
-        image::ImageFormat::Gif => Some("GIF : seule la première image sera convertie".into()),
-        image::ImageFormat::Tiff => Some("TIFF : seule la première page sera convertie".into()),
+        image::ImageFormat::Gif => Some(first_frame_only("GIF")),
+        image::ImageFormat::Tiff => Some(tr!("TIFF: only the first page will be converted")),
         image::ImageFormat::WebP | image::ImageFormat::Png => {
             let animated = bytes.windows(4).any(|x| x == b"ANIM" || x == b"acTL");
-            animated.then(|| "Animation : seule la première image sera convertie".into())
+            animated.then(|| first_frame_only("Animation"))
         }
         _ => None,
     };
@@ -290,7 +296,7 @@ fn resize_image(mut image: RgbaImage, side: &Side, dw: u32, dh: u32) -> Result<R
         };
         raw.extend_from_slice(&[color(p.r), color(p.g), color(p.b), (a * 255.).round() as u8]);
     }
-    RgbaImage::from_raw(dw, dh, raw).context("Redimensionnement invalide")
+    RgbaImage::from_raw(dw, dh, raw).context(t("Invalid resize"))
 }
 fn quantize(image: RgbaImage, colors: u32, dither: f32, fixed: &[[u8; 4]]) -> Result<RgbaImage> {
     let mut attr = imagequant::new();
@@ -314,7 +320,7 @@ fn quantize(image: RgbaImage, colors: u32, dither: f32, fixed: &[[u8; 4]]) -> Re
             [p.r, p.g, p.b, p.a]
         })
         .collect();
-    RgbaImage::from_raw(image.width(), image.height(), raw).context("Palette invalide")
+    RgbaImage::from_raw(image.width(), image.height(), raw).context(t("Invalid palette"))
 }
 fn zx(image: &RgbaImage, dither: f32, cancel: &AtomicBool) -> Result<RgbaImage> {
     const COLORS: [[u8; 4]; 15] = [
@@ -391,13 +397,13 @@ pub fn convert(
     mut progress: impl FnMut(&str),
 ) -> Result<Converted> {
     settings.validate()?;
-    ensure!(side_index < 2, "Côté invalide");
+    ensure!(side_index < 2, t("Invalid side"));
     check_cancel(cancel)?;
     let side = &settings.sides[side_index];
-    let format = side
-        .format
-        .context("Choisissez un format de sortie ; le côté original ne peut pas être exporté")?;
-    progress("Traitement");
+    let format = side.format.context(t(
+        "Choose an output format; the original side cannot be exported",
+    ))?;
+    progress(t("Processing"));
     let mut image = rotate(&source.image, settings.rotation);
     if side.resize.enabled {
         let (dw, dh) = target_dimensions(image.width(), image.height(), side)?;
@@ -436,10 +442,10 @@ pub fn convert(
         }
     }
     check_cancel(cancel)?;
-    progress("Encodage");
+    progress(t("Encoding"));
     let bytes = squoosh_codecs::encode(&image, format, &side.options[format.key()])?;
     check_cancel(cancel)?;
-    progress("Relecture");
+    progress(t("Decoding"));
     let image = match format {
         Format::Avif => squoosh_codecs::decode_avif(&bytes)?.0,
         Format::Jpeg => squoosh_codecs::decode_jpeg(&bytes)?,

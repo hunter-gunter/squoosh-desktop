@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     container: debian:13-slim
     steps:
-      - name: Installer les outils système
+      - name: Install the system tools
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl git build-essential pkg-config nasm dpkg-dev file libwebp-dev libsharpyuv-dev libavif-dev liblcms2-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libx11-xcb-dev libxcb1-dev libegl1-mesa-dev libgl1-mesa-dev
@@ -24,14 +24,14 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.95.0 -c clippy,rustfmt
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-      - name: Vérifier et tester
+      - name: Check and test
         run: |
           cargo fmt --all -- --check
           cargo clippy --workspace --all-targets --locked -- -D warnings
           cargo test --workspace --locked
-      - name: Construire le paquet Debian
+      - name: Build the Debian package
         run: ./scripts/deb.sh
-      - name: Construire l’AppImage
+      - name: Build the AppImage
         run: ./scripts/appimage.sh
       - uses: actions/upload-artifact@v4
         with:
@@ -46,15 +46,15 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - name: Installer les outils système
+      - name: Install the system tools
         run: pacman -Syu --noconfirm base-devel git rustup nasm libwebp libavif aom lcms2 libxkbcommon libxkbcommon-x11 wayland libx11 libxcb libglvnd
       - uses: actions/checkout@v4
-      - name: Préparer le compte de construction
+      - name: Prepare the build account
         run: |
           useradd --create-home builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
           runuser -u builder -- env HOME=/home/builder rustup default 1.95.0
-      - name: Construire la source complète et le paquet Arch
+      - name: Build the complete source and the Arch package
         run: |
           runuser -u builder -- env HOME=/home/builder ./scripts/source.sh
           cd target/dist

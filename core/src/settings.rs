@@ -2,6 +2,7 @@ use anyhow::{Result, ensure};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use squoosh_codecs::{Format, Options, defaults, validate};
+use squoosh_i18n::{t, tr};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -37,11 +38,11 @@ impl Filter {
             Self::Mitchell => "Mitchell",
             Self::Lanczos3 => "Lanczos3",
             Self::Hqx => "HQX",
-            Self::Pixelated => "Pixelated (voisin)",
-            Self::BrowserLow => "Navigateur faible (triangle)",
-            Self::BrowserMedium => "Navigateur moyen (bicubique)",
-            Self::BrowserHigh => "Navigateur élevé (Lanczos3)",
-            Self::Vector => "Vectoriel (SVG)",
+            Self::Pixelated => t("Pixelated (nearest)"),
+            Self::BrowserLow => t("Browser low (triangle)"),
+            Self::BrowserMedium => t("Browser medium (bicubic)"),
+            Self::BrowserHigh => t("Browser high (Lanczos3)"),
+            Self::Vector => t("Vector (SVG)"),
         }
     }
 }
@@ -137,28 +138,28 @@ impl Settings {
     pub fn validate(&self) -> Result<()> {
         ensure!(
             [0, 90, 180, 270].contains(&self.rotation),
-            "Rotation invalide"
+            t("Invalid rotation")
         );
-        ensure!(self.export_side < 2, "Côté invalide");
+        ensure!(self.export_side < 2, t("Invalid side"));
         for s in &self.sides {
             ensure!(
                 s.resize.width <= 32768 && s.resize.height <= 32768,
-                "Dimensions trop grandes"
+                t("Dimensions too large")
             );
             ensure!(
                 (2..=256).contains(&s.palette.colors),
-                "Palette : 2 à 256 couleurs"
+                t("Palette: 2 to 256 colors")
             );
             ensure!(
                 s.palette.dither.is_finite() && (0.0..=1.0).contains(&s.palette.dither),
-                "Tramage invalide"
+                t("Invalid dithering")
             );
             for f in Format::ALL {
                 validate(
                     f,
                     s.options
                         .get(f.key())
-                        .ok_or_else(|| anyhow::anyhow!("Réglages absents"))?,
+                        .ok_or_else(|| anyhow::anyhow!(t("Missing settings")))?,
                 )?;
             }
         }
@@ -174,7 +175,8 @@ impl Overrides {
         for (path, replacement) in &self.0 {
             *value
                 .pointer_mut(path)
-                .ok_or_else(|| anyhow::anyhow!("Réglage inconnu : {path}"))? = replacement.clone();
+                .ok_or_else(|| anyhow::anyhow!(tr!("Unknown setting: {path}", path = path)))? =
+                replacement.clone();
         }
         let result: Settings = serde_json::from_value(value)?;
         result.validate()?;

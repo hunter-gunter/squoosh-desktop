@@ -21,16 +21,16 @@ jobs:
         run: |
           rustup toolchain install 1.95.0 --profile minimal -c clippy
           rustup default 1.95.0
-      - name: Installer NASM et Inno Setup
+      - name: Install NASM and Inno Setup
         run: choco install nasm innosetup --no-progress -y
-      - name: Cache des bibliothèques vcpkg
+      - name: Cache the vcpkg libraries
         uses: actions/cache@v4
         with:
           path: target/vcpkg-cache
           key: vcpkg-x64-windows-static-${{ hashFiles('vcpkg.json', 'scripts/windows.ps1') }}
-      - name: Préparer le cache vcpkg
+      - name: Prepare the vcpkg cache
         run: New-Item -ItemType Directory -Force target/vcpkg-cache | Out-Null
-      - name: Tester et construire les paquets
+      - name: Test and build the packages
         run: ./scripts/windows.ps1 -Test
       - name: Clippy
         run: |
@@ -39,7 +39,7 @@ jobs:
           $env:LCMS2_INCLUDE_DIR = "$env:SQUOOSH_NATIVE_PREFIX\include"
           cargo clippy --workspace --all-targets --locked -- -D warnings
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Vérifier l’exécutable autonome
+      - name: Check the standalone executable
         run: |
           $exe = 'target\release\squoosh-desktop.exe'
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
@@ -48,7 +48,7 @@ jobs:
           $dlls
           # Only DLLs shipped with Windows 10: no VC++ runtime, no codec DLL.
           $foreign = $dlls | Where-Object { $_ -match '^(vcruntime|msvcp|ucrtbase|libwebp|avif|aom|lcms|yuv|jpeg)' }
-          if ($foreign) { throw "Dépendances inattendues : $foreign" }
+          if ($foreign) { throw "Unexpected dependencies: $foreign" }
       - uses: actions/upload-artifact@v4
         with:
           name: windows-x64

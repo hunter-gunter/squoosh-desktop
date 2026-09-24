@@ -20,7 +20,7 @@ static int fail(char *error, const char *message) {
 }
 static int copy_result(const uint8_t *data, size_t size, uint8_t **out, size_t *len, char *error) {
     *out = malloc(size);
-    if (!*out) return fail(error, "Allocation du résultat impossible");
+    if (!*out) return fail(error, "Cannot allocate the result");
     memcpy(*out, data, size); *len = size; return 1;
 }
 typedef struct { struct jpeg_error_mgr mgr; jmp_buf jump; char message[JMSG_LENGTH_MAX]; } jpeg_error;
@@ -37,7 +37,7 @@ int sq_jpeg(const uint8_t *pixels, uint32_t w, uint32_t h, const jpeg_options *o
     unsigned char **buffer = calloc(1, sizeof(*buffer));
     unsigned long *length = calloc(1, sizeof(*length));
     if (!c || !e || !buffer || !length) {
-        free(c); free(e); free(buffer); free(length); return fail(error, "Allocation JPEG impossible");
+        free(c); free(e); free(buffer); free(length); return fail(error, "Cannot allocate JPEG memory");
     }
     c->err = jpeg_std_error(&e->mgr); e->mgr.error_exit = jpeg_failure;
     if (setjmp(e->jump)) {
@@ -85,7 +85,7 @@ int sq_jpeg(const uint8_t *pixels, uint32_t w, uint32_t h, const jpeg_options *o
 int sq_webp(const uint8_t *pixels, uint32_t w, uint32_t h, const webp_options *o,
             uint8_t **out, size_t *len, char *error) {
     WebPConfig config;
-    if (!WebPConfigInit(&config)) return fail(error, "ABI libwebp incompatible");
+    if (!WebPConfigInit(&config)) return fail(error, "Incompatible libwebp ABI");
 #define SET(name) config.name=o->name
     SET(quality); SET(target_size); SET(target_PSNR); SET(method); SET(sns_strength);
     SET(filter_strength); SET(filter_sharpness); SET(filter_type); SET(partitions);
@@ -95,15 +95,15 @@ int sq_webp(const uint8_t *pixels, uint32_t w, uint32_t h, const webp_options *o
     SET(low_memory); SET(near_lossless); SET(use_delta_palette); SET(use_sharp_yuv);
 #undef SET
     config.qmax=100;
-    if (!WebPValidateConfig(&config)) return fail(error, "Réglages WebP invalides");
+    if (!WebPValidateConfig(&config)) return fail(error, "Invalid WebP settings");
     WebPPicture pic; WebPMemoryWriter writer;
-    if (!WebPPictureInit(&pic)) return fail(error, "ABI WebP incompatible");
+    if (!WebPPictureInit(&pic)) return fail(error, "Incompatible WebP ABI");
     WebPMemoryWriterInit(&writer);
     pic.use_argb=config.lossless || config.use_sharp_yuv || config.preprocessing > 0;
     pic.width=(int)w; pic.height=(int)h; pic.writer=WebPMemoryWrite; pic.custom_ptr=&writer;
     int ok=WebPPictureImportRGBA(&pic, pixels, (int)w*4) && WebPEncode(&config, &pic);
     if (ok) ok=copy_result(writer.mem, writer.size, out, len, error);
-    else snprintf(error,512,"Échec WebP (code %d)",pic.error_code);
+    else snprintf(error,512,"WebP failed (code %d)",pic.error_code);
     WebPPictureFree(&pic); WebPMemoryWriterClear(&writer); return ok;
 }
 // Sharp YUV through libsharpyuv directly: Debian's and vcpkg's libavif are
@@ -131,7 +131,7 @@ int sq_avif(const uint8_t *pixels, uint32_t w, uint32_t h, const avif_options *o
     avifImage *image=avifImageCreate(w,h,8,formats[o->subsample]);
     avifEncoder *encoder=avifEncoderCreate(); avifRWData data=AVIF_DATA_EMPTY;
     avifResult status=AVIF_RESULT_UNKNOWN_ERROR; int ok=0;
-    if (!image || !encoder) { fail(error,"Allocation AVIF impossible"); goto cleanup; }
+    if (!image || !encoder) { fail(error,"Cannot allocate AVIF memory"); goto cleanup; }
     int lossless=o->quality==100 && (o->qualityAlpha==-1 || o->qualityAlpha==100) && o->subsample==3;
     image->matrixCoefficients=lossless ? AVIF_MATRIX_COEFFICIENTS_IDENTITY : AVIF_MATRIX_COEFFICIENTS_BT601;
     image->colorPrimaries=AVIF_COLOR_PRIMARIES_BT709;
@@ -158,16 +158,16 @@ int sq_avif(const uint8_t *pixels, uint32_t w, uint32_t h, const avif_options *o
     if(status!=AVIF_RESULT_OK) goto codec_error;
     ok=copy_result(data.data,data.size,out,len,error); goto cleanup;
 codec_error:
-    snprintf(error,512,"AVIF : %s (%s)",avifResultToString(status),encoder->diag.error);
+    snprintf(error,512,"AVIF: %s (%s)",avifResultToString(status),encoder->diag.error);
 cleanup:
     avifRWDataFree(&data); if(encoder) avifEncoderDestroy(encoder); if(image) avifImageDestroy(image); return ok;
 }
 // Apply an embedded RGB or grayscale ICC profile to RGBA8 while retaining alpha.
 int sq_icc(uint8_t *pixels, size_t count, const uint8_t *icc, size_t icc_len, char *error) {
-    if (icc_len > UINT32_MAX || count > UINT32_MAX) return fail(error,"Profil/image trop grand");
+    if (icc_len > UINT32_MAX || count > UINT32_MAX) return fail(error,"Profile or image too large");
     cmsHPROFILE source=cmsOpenProfileFromMem(icc,(cmsUInt32Number)icc_len);
     cmsHPROFILE target=cmsCreate_sRGBProfile();
-    if (!source || !target) { if(source)cmsCloseProfile(source); if(target)cmsCloseProfile(target); return fail(error,"Profil ICC invalide"); }
+    if (!source || !target) { if(source)cmsCloseProfile(source); if(target)cmsCloseProfile(target); return fail(error,"Invalid ICC profile"); }
     cmsColorSpaceSignature space=cmsGetColorSpace(source);
     cmsHTRANSFORM transform=NULL;
     if (space==cmsSigRgbData) {
@@ -179,11 +179,11 @@ int sq_icc(uint8_t *pixels, size_t count, const uint8_t *icc, size_t icc_len, ch
     }
     if(transform)cmsDeleteTransform(transform);
     cmsCloseProfile(source); cmsCloseProfile(target);
-    return transform!=NULL ? 1 : fail(error,"Profil ICC non pris en charge");
+    return transform!=NULL ? 1 : fail(error,"Unsupported ICC profile");
 }
 int sq_avif_decode(const uint8_t *data, size_t size, uint8_t **out, size_t *len,
                    uint32_t *w, uint32_t *h, int32_t *rotation, int32_t *mirror, int32_t *animated, char *error) {
-    avifDecoder *decoder=avifDecoderCreate(); if(!decoder)return fail(error,"Allocation AVIF impossible");
+    avifDecoder *decoder=avifDecoderCreate(); if(!decoder)return fail(error,"Cannot allocate AVIF memory");
     decoder->maxThreads=4; decoder->imageSizeLimit=40000000; decoder->imageDimensionLimit=32768;
     avifResult status=avifDecoderSetIOMemory(decoder,data,size); int ok=0;
     avifImage *view=NULL; avifRGBImage rgb; memset(&rgb,0,sizeof(rgb));
@@ -193,17 +193,17 @@ int sq_avif_decode(const uint8_t *data, size_t size, uint8_t **out, size_t *len,
     status=avifDecoderNextImage(decoder); if(status!=AVIF_RESULT_OK)goto cleanup;
     avifImage *img=decoder->image;
     if(img->transferCharacteristics==AVIF_TRANSFER_CHARACTERISTICS_SMPTE2084 || img->transferCharacteristics==AVIF_TRANSFER_CHARACTERISTICS_HLG) {
-        fail(error,"AVIF HDR non pris en charge par le pipeline SDR"); goto done;
+        fail(error,"HDR AVIF is not supported by the SDR pipeline"); goto done;
     }
     *rotation=(img->transformFlags & AVIF_TRANSFORM_IROT)?img->irot.angle:0;
     *mirror=(img->transformFlags & AVIF_TRANSFORM_IMIR)?img->imir.axis:-1;
     if(img->transformFlags & AVIF_TRANSFORM_CLAP) {
         avifCropRect crop;
         if(!avifCropRectFromCleanApertureBox(&crop,&img->clap,img->width,img->height,&decoder->diag)) {
-            fail(error,"Recadrage AVIF invalide"); goto done;
+            fail(error,"Invalid AVIF crop"); goto done;
         }
         view=avifImageCreateEmpty();
-        if(!view){fail(error,"Allocation AVIF impossible");goto done;}
+        if(!view){fail(error,"Cannot allocate AVIF memory");goto done;}
         status=avifImageSetViewRect(view,img,&crop); if(status!=AVIF_RESULT_OK)goto cleanup;
         img=view;
     }
@@ -239,25 +239,25 @@ static void jpeg_reader_free(jpeg_reader *s) {
     free(s);
 }
 int sq_jpeg_decode(const uint8_t *bytes,size_t size,uint8_t **out,size_t *len,uint32_t *w,uint32_t *h,char *error) {
-    jpeg_reader *s=calloc(1,sizeof(*s));if(!s)return fail(error,"Allocation JPEG impossible");
+    jpeg_reader *s=calloc(1,sizeof(*s));if(!s)return fail(error,"Cannot allocate JPEG memory");
     s->c.err=jpeg_std_error(&s->e.mgr);s->e.mgr.error_exit=jpeg_failure;
     if(setjmp(s->e.jump)){fail(error,s->e.message);free(s->pixels);jpeg_reader_free(s);return 0;}
     jpeg_create_decompress(&s->c);jpeg_mem_src(&s->c,bytes,size);
     jpeg_save_markers(&s->c,JPEG_APP0+2,65535);
     jpeg_read_header(&s->c,TRUE);
     if(!s->c.image_width || !s->c.image_height || s->c.image_width>32768 || s->c.image_height>32768 || (uint64_t)s->c.image_width*s->c.image_height>40000000) {
-        jpeg_reader_free(s);return fail(error,"JPEG supérieur à la limite de dimensions");
+        jpeg_reader_free(s);return fail(error,"JPEG exceeds the dimension limit");
     }
     jpeg_read_icc_profile(&s->c,&s->icc,&s->icc_len);
     int cmyk=s->c.jpeg_color_space==JCS_CMYK || s->c.jpeg_color_space==JCS_YCCK;
     s->c.out_color_space=cmyk?JCS_CMYK:JCS_EXT_RGBA;
     jpeg_start_decompress(&s->c);*w=s->c.output_width;*h=s->c.output_height;*len=(size_t)*w**h*4;
     s->pixels=malloc(*len);s->row=malloc((size_t)*w*4);
-    if(!s->pixels||!s->row){free(s->pixels);jpeg_reader_free(s);return fail(error,"Allocation JPEG impossible");}
+    if(!s->pixels||!s->row){free(s->pixels);jpeg_reader_free(s);return fail(error,"Cannot allocate JPEG memory");}
     if(cmyk && s->icc_len){
         s->source=cmsOpenProfileFromMem(s->icc,s->icc_len);s->target=cmsCreate_sRGBProfile();
         if(s->source && s->target)s->transform=cmsCreateTransform(s->source,TYPE_CMYK_8,s->target,TYPE_RGBA_8,INTENT_PERCEPTUAL,0);
-        if(!s->transform){free(s->pixels);jpeg_reader_free(s);return fail(error,"Profil CMJN invalide");}
+        if(!s->transform){free(s->pixels);jpeg_reader_free(s);return fail(error,"Invalid CMYK profile");}
     }
     while(s->c.output_scanline<s->c.output_height){
         uint8_t *dest=s->pixels+(size_t)s->c.output_scanline**w*4;

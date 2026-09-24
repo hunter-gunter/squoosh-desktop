@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, bail, ensure};
 use image::{ImageEncoder, RgbaImage};
 use serde::{Deserialize, Serialize};
+use squoosh_i18n::{n, t, tr};
 use std::{
     collections::BTreeMap,
     ffi::{CStr, c_char, c_void},
@@ -60,18 +61,15 @@ pub fn defaults(format: Format) -> Options {
 pub fn validate(format: Format, options: &Options) -> Result<()> {
     ensure!(
         options.len() == specs(format).len(),
-        "Nombre de réglages invalide"
+        t("Invalid number of settings")
     );
     for s in specs(format) {
         let v = options
             .get(&s.key)
-            .with_context(|| format!("Réglage absent : {}", s.key))?;
+            .with_context(|| tr!("Missing setting: {}", s.key))?;
         ensure!(
             (s.min..=s.max).contains(v),
-            "{} doit être entre {} et {}",
-            s.label,
-            s.min,
-            s.max
+            tr!("{} must be between {} and {}", t(&s.label), s.min, s.max)
         );
     }
     Ok(())
@@ -79,12 +77,12 @@ pub fn validate(format: Format, options: &Options) -> Result<()> {
 pub fn checked_dimensions(w: u32, h: u32) -> Result<usize> {
     ensure!(
         w > 0 && h > 0 && w <= 32768 && h <= 32768,
-        "Dimensions invalides (maximum 32 768 par côté)"
+        t("Invalid dimensions (at most 32,768 per side)")
     );
     let pixels = u64::from(w) * u64::from(h);
     ensure!(
         pixels <= 40_000_000,
-        "Image trop grande (maximum 40 mégapixels)"
+        t("Image too large (at most 40 megapixels)")
     );
     Ok(pixels as usize * 4)
 }
@@ -142,10 +140,35 @@ unsafe extern "C" {
 }
 fn message(error: &[c_char; 512]) -> String {
     // Native functions always NUL-terminate their fixed-size error buffer.
-    unsafe {
+    let message = unsafe {
         CStr::from_ptr(error.as_ptr())
             .to_string_lossy()
             .into_owned()
+    };
+    translate_native(message)
+}
+/// `native.c` reports in English; library messages (libjpeg, libavif) stay as is.
+fn translate_native(message: String) -> String {
+    const MESSAGES: [&str; 14] = [
+        n("Cannot allocate the result"),
+        n("Cannot allocate JPEG memory"),
+        n("Cannot allocate AVIF memory"),
+        n("Incompatible libwebp ABI"),
+        n("Incompatible WebP ABI"),
+        n("Invalid WebP settings"),
+        n("Profile or image too large"),
+        n("Invalid ICC profile"),
+        n("Unsupported ICC profile"),
+        n("HDR AVIF is not supported by the SDR pipeline"),
+        n("Invalid AVIF crop"),
+        n("JPEG exceeds the dimension limit"),
+        n("Invalid CMYK profile"),
+        // Followed by " (code N)".
+        n("WebP failed"),
+    ];
+    match MESSAGES.iter().find(|en| message.starts_with(*en)) {
+        Some(en) => format!("{}{}", t(en), &message[en.len()..]),
+        None => message,
     }
 }
 unsafe fn take_buffer(ptr: *mut u8, len: usize) -> Vec<u8> {
@@ -252,7 +275,7 @@ pub fn decode_avif(bytes: &[u8]) -> Result<(RgbaImage, bool)> {
     ensure!(ok != 0, "{}", message(&error));
     let bytes = unsafe { take_buffer(ptr, len) };
     checked_dimensions(w, h)?;
-    let mut img = RgbaImage::from_raw(w, h, bytes).context("Pixels AVIF invalides")?;
+    let mut img = RgbaImage::from_raw(w, h, bytes).context(t("Invalid AVIF pixels"))?;
     img = match rot {
         1 => image::imageops::rotate270(&img),
         2 => image::imageops::rotate180(&img),
@@ -285,5 +308,39 @@ pub fn decode_jpeg(bytes: &[u8]) -> Result<RgbaImage> {
     ensure!(ok != 0, "{}", message(&error));
     let bytes = unsafe { take_buffer(ptr, len) };
     checked_dimensions(w, h)?;
-    RgbaImage::from_raw(w, h, bytes).context("Pixels JPEG invalides")
+    RgbaImage::from_raw(w, h, bytes).context(t("Invalid JPEG pixels"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use squoosh_i18n::{Lang, set_lang};
+
+    // The only test of this crate that switches the process-wide language.
+    #[test]
+    fn messages_and_labels_follow_the_language() {
+        set_lang(Lang::Fr);
+        assert_eq!(
+            translate_native("WebP failed (code 3)".into()),
+            "Échec WebP (code 3)"
+        );
+        assert_eq!(
+            translate_native("libavif says no".into()),
+            "libavif says no"
+        );
+        assert_eq!(t(&specs(Format::Jpeg)[0].label), "Qualité");
+        let error = validate(Format::Png, &Options::new()).unwrap_err();
+        assert_eq!(error.to_string(), "Nombre de réglages invalide");
+        set_lang(Lang::En);
+        assert_eq!(
+            translate_native("Invalid ICC profile".into()),
+            "Invalid ICC profile"
+        );
+        // Every registry entry parses, and its choices fit its range.
+        for f in Format::ALL {
+            for s in specs(f) {
+                assert!(s.choices.is_empty() || s.choices.len() == (s.max - s.min + 1) as usize);
+            }
+        }
+    }
 }

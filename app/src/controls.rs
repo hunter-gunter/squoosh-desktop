@@ -7,6 +7,7 @@ use squoosh_core::{
     pipeline::target_dimensions,
     settings::{Filter, Side},
 };
+use squoosh_i18n::{t, tr};
 
 fn active(f: Format, key: &str, o: &Options) -> bool {
     match f {
@@ -43,7 +44,7 @@ fn active(f: Format, key: &str, o: &Options) -> bool {
 /// The label shown in the codec dropdown, matching the web encoder names.
 pub fn format_label(format: Option<Format>) -> &'static str {
     match format {
-        None => "Image originale",
+        None => t("Original image"),
         Some(Format::Jpeg) => "MozJPEG",
         Some(Format::Png) => "OxiPNG",
         Some(Format::Webp) => "WebP",
@@ -58,17 +59,17 @@ fn option(ui: &mut Ui, f: Format, key: &str, o: &mut Options, theme: Theme) {
     ui.push_id(key, |ui| {
         ui.add_enabled_ui(enabled, |ui| {
             if !s.choices.is_empty() {
-                let selected = s.choices[(*value - s.min) as usize].clone();
-                theme::row_text_first(ui, &s.label, |ui| {
-                    theme::select(ui, "choice", &selected, false, |ui| {
+                let selected = t(&s.choices[(*value - s.min) as usize]);
+                theme::row_text_first(ui, t(&s.label), |ui| {
+                    theme::select(ui, "choice", selected, false, |ui| {
                         for (i, label) in s.choices.iter().enumerate() {
-                            ui.selectable_value(value, s.min + i as i32, label);
+                            ui.selectable_value(value, s.min + i as i32, t(label));
                         }
                     });
                 });
             } else if s.min == 0 && s.max == 1 {
                 let mut checked = *value != 0;
-                theme::row_toggle(ui, &s.label, |ui| {
+                theme::row_toggle(ui, t(&s.label), |ui| {
                     if theme::checkbox(ui, &mut checked, theme).changed() {
                         *value = i32::from(checked);
                     }
@@ -76,10 +77,10 @@ fn option(ui: &mut Ui, f: Format, key: &str, o: &mut Options, theme: Theme) {
             } else {
                 // Some sliders read better inverted, exactly as the web does.
                 let (mut displayed, max, label) = match (f, key) {
-                    (Format::Avif, "speed") => (10 - *value, 10, "Effort (10 = lent)"),
-                    (Format::Webp, "near_lossless") => (100 - *value, 100, "Perte légère"),
-                    (Format::Webp, "filter_sharpness") => (7 - *value, 7, "Lissage du filtre"),
-                    _ => (*value, s.max, s.label.as_str()),
+                    (Format::Avif, "speed") => (10 - *value, 10, t("Effort (10 = slow)")),
+                    (Format::Webp, "near_lossless") => (100 - *value, 100, t("Slight loss")),
+                    (Format::Webp, "filter_sharpness") => (7 - *value, 7, t("Filter smoothing")),
+                    _ => (*value, s.max, t(&s.label)),
                 };
                 theme::one_cell(ui, |ui| {
                     let mut v = displayed as f64;
@@ -116,7 +117,7 @@ fn resize_options(
     theme::section(ui, |ui| {
         let r = &mut side.resize;
         let filter = r.filter;
-        theme::row_text_first(ui, "Méthode :", |ui| {
+        theme::row_text_first(ui, t("Method:"), |ui| {
             theme::select(ui, "filter", filter.label(), false, |ui| {
                 for f in Filter::ALL {
                     ui.add_enabled_ui(f != Filter::Vector || is_svg, |ui| {
@@ -132,23 +133,21 @@ fn resize_options(
             )
         };
         let current = SIZE_PRESETS.iter().position(|&p| scaled(p) == (dw, dh));
-        let label = |p: f64| format!("{} %", (p * 100.).round());
-        let selected = current.map_or("Personnalisé".to_owned(), |i| label(SIZE_PRESETS[i]));
-        theme::row_text_first(ui, "Préréglage :", |ui| {
+        let label = |p: f64| tr!("{}%", (p * 100.).round());
+        let custom = t("Custom");
+        let selected = current.map_or(custom.to_owned(), |i| label(SIZE_PRESETS[i]));
+        theme::row_text_first(ui, t("Preset:"), |ui| {
             theme::select(ui, "preset", &selected, false, |ui| {
                 for (i, &p) in SIZE_PRESETS.iter().enumerate() {
                     if ui.selectable_label(current == Some(i), label(p)).clicked() {
                         (r.width, r.height) = scaled(p);
                     }
                 }
-                ui.add_enabled(
-                    false,
-                    egui::Button::selectable(current.is_none(), "Personnalisé"),
-                );
+                ui.add_enabled(false, egui::Button::selectable(current.is_none(), custom));
             });
         });
         let mut width = dw;
-        theme::row_text_first(ui, "Largeur :", |ui| {
+        theme::row_text_first(ui, t("Width:"), |ui| {
             if theme::text_field(ui, &mut width, 32768).changed() {
                 r.width = width;
                 r.height = if r.lock_ratio {
@@ -159,7 +158,7 @@ fn resize_options(
             }
         });
         let mut height = dh;
-        theme::row_text_first(ui, "Hauteur :", |ui| {
+        theme::row_text_first(ui, t("Height:"), |ui| {
             if theme::text_field(ui, &mut height, 32768).changed() {
                 r.height = height;
                 r.width = if r.lock_ratio {
@@ -169,28 +168,25 @@ fn resize_options(
                 };
             }
         });
-        theme::row_toggle(ui, "Prémultiplier l’alpha", |ui| {
+        theme::row_toggle(ui, t("Premultiply alpha"), |ui| {
             theme::checkbox(ui, &mut r.premultiply, theme);
         });
-        theme::row_toggle(ui, "RGB linéaire", |ui| {
+        theme::row_toggle(ui, t("Linear RGB"), |ui| {
             theme::checkbox(ui, &mut r.linear_rgb, theme);
         });
-        theme::row_toggle(ui, "Conserver les proportions", |ui| {
+        theme::row_toggle(ui, t("Maintain aspect ratio"), |ui| {
             if theme::checkbox(ui, &mut r.lock_ratio, theme).changed() && !r.lock_ratio {
                 // Pin the current size so unlocking never makes it jump.
                 (r.width, r.height) = (dw, dh);
             }
         });
         if !r.lock_ratio {
-            let fit = if r.crop {
-                "Recadrage central"
-            } else {
-                "Étirer"
-            };
-            theme::row_text_first(ui, "Ajustement :", |ui| {
+            let (stretch, crop) = (t("Stretch"), t("Center crop"));
+            let fit = if r.crop { crop } else { stretch };
+            theme::row_text_first(ui, t("Fit method:"), |ui| {
                 theme::select(ui, "fit", fit, false, |ui| {
-                    ui.selectable_value(&mut r.crop, false, "Étirer");
-                    ui.selectable_value(&mut r.crop, true, "Recadrage central");
+                    ui.selectable_value(&mut r.crop, false, stretch);
+                    ui.selectable_value(&mut r.crop, true, crop);
                 });
             });
         }
@@ -200,24 +196,25 @@ fn resize_options(
 fn palette_options(ui: &mut Ui, side: &mut Side, theme: Theme) {
     theme::section(ui, |ui| {
         let p = &mut side.palette;
-        let selected = if p.zx { "ZX" } else { "Standard" };
-        theme::row_text_first(ui, "Type", |ui| {
+        let standard = t("Standard");
+        let selected = if p.zx { "ZX" } else { standard };
+        theme::row_text_first(ui, t("Type"), |ui| {
             theme::select(ui, "quant-type", selected, false, |ui| {
-                ui.selectable_value(&mut p.zx, false, "Standard");
+                ui.selectable_value(&mut p.zx, false, standard);
                 ui.selectable_value(&mut p.zx, true, "ZX");
             });
         });
         if !p.zx {
             theme::one_cell(ui, |ui| {
                 let mut colors = p.colors as f64;
-                if theme::range(ui, "Couleurs", &mut colors, 2.0..=256.0, 1.0, 0, theme) {
+                if theme::range(ui, t("Colors"), &mut colors, 2.0..=256.0, 1.0, 0, theme) {
                     p.colors = colors.round() as u32;
                 }
             });
         }
         theme::one_cell(ui, |ui| {
             let mut dither = p.dither as f64;
-            if theme::range(ui, "Tramage", &mut dither, 0.0..=1.0, 0.01, 2, theme) {
+            if theme::range(ui, t("Dithering"), &mut dither, 0.0..=1.0, 0.01, 2, theme) {
                 p.dither = dither as f32;
             }
         });
@@ -235,12 +232,12 @@ pub fn edit(
     source: Option<(u32, u32)>,
     buttons: impl FnOnce(&mut Ui),
 ) {
-    theme::options_title(ui, "Édition", theme, false, top, buttons);
-    theme::section_enabler(ui, "Redimensionner", &mut side.resize.enabled, theme);
+    theme::options_title(ui, t("Edit"), theme, false, top, buttons);
+    theme::section_enabler(ui, t("Resize"), &mut side.resize.enabled, theme);
     if side.resize.enabled {
         resize_options(ui, side, is_svg, theme, source);
     }
-    theme::section_enabler(ui, "Réduire la palette", &mut side.palette.enabled, theme);
+    theme::section_enabler(ui, t("Reduce palette"), &mut side.palette.enabled, theme);
     if side.palette.enabled {
         palette_options(ui, side, theme);
     }
@@ -255,20 +252,17 @@ pub fn compress(
     top: egui::CornerRadius,
 ) {
     let original = side.format.is_none();
-    theme::options_title(ui, "Compression", theme, original, top, |_| {});
+    theme::options_title(ui, t("Compress"), theme, original, top, |_| {});
+    let original_label = tr!("Original image ({source_name})", source_name = source_name);
     let selected = if original {
-        format!("Image originale ({source_name})")
+        original_label.clone()
     } else {
         format_label(side.format).to_owned()
     };
     theme::section(ui, |ui| {
         theme::one_cell(ui, |ui| {
             theme::select(ui, "format", &selected, true, |ui| {
-                ui.selectable_value(
-                    &mut side.format,
-                    None,
-                    format!("Image originale ({source_name})"),
-                );
+                ui.selectable_value(&mut side.format, None, original_label);
                 for f in Format::ALL {
                     ui.selectable_value(&mut side.format, Some(f), format_label(Some(f)));
                 }
@@ -283,7 +277,7 @@ pub fn compress(
         match format {
             Format::Avif => {
                 let mut lossless = options["quality"] == 100;
-                theme::row_toggle(ui, "Sans perte", |ui| {
+                theme::row_toggle(ui, t("Lossless"), |ui| {
                     if theme::checkbox(ui, &mut lossless, theme).changed() {
                         options.insert("quality".into(), if lossless { 100 } else { 50 });
                         options.insert("qualityAlpha".into(), -1);
@@ -320,7 +314,7 @@ pub fn compress(
                     theme::one_cell(ui, |ui| {
                         if theme::range(
                             ui,
-                            "Effort sans perte",
+                            t("Lossless effort"),
                             &mut preset,
                             0.0..=9.0,
                             1.0,
@@ -347,7 +341,7 @@ pub fn compress(
 
         let id = ui.id().with("advanced");
         let mut open = ui.data(|d| d.get_temp::<bool>(id)).unwrap_or(false);
-        theme::revealer(ui, "Réglages avancés", &mut open);
+        theme::revealer(ui, t("Advanced settings"), &mut open);
         ui.data_mut(|d| d.insert_temp(id, open));
         if open {
             for spec in specs(format) {
@@ -363,7 +357,7 @@ pub fn compress(
                 option(ui, format, &spec.key, options, theme);
             }
             if format == Format::Jpeg {
-                theme::row_text_first(ui, "Fond", |ui| {
+                theme::row_text_first(ui, t("Background"), |ui| {
                     ui.color_edit_button_srgb(&mut side.background);
                 });
             }

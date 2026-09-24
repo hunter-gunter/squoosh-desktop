@@ -3063,7 +3063,7 @@ dependencies = [
 
 [[package]]
 name = "squoosh-codecs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "cc",
@@ -3073,11 +3073,12 @@ dependencies = [
  "pkg-config",
  "serde",
  "serde_json",
+ "squoosh-i18n",
 ]
 
 [[package]]
 name = "squoosh-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "crossbeam-channel",
@@ -3093,23 +3094,35 @@ dependencies = [
  "serde",
  "serde_json",
  "squoosh-codecs",
+ "squoosh-i18n",
  "tempfile",
 ]
 
 [[package]]
 name = "squoosh-desktop"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "crossbeam-channel",
  "eframe",
+ "fontdb",
  "image",
  "resvg",
  "rfd",
  "serde_json",
+ "skrifa",
  "squoosh-codecs",
  "squoosh-core",
+ "squoosh-i18n",
  "winresource",
+]
+
+[[package]]
+name = "squoosh-i18n"
+version = "0.1.1"
+dependencies = [
+ "serde_json",
+ "sys-locale",
 ]
 
 [[package]]
@@ -3157,6 +3170,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "sys-locale"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eab9a99a024a169fe8a903cf9d4a3b3601109bcc13bd9e3c6fff259138626c4"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

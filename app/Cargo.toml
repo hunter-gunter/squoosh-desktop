@@ -8,6 +8,7 @@ rust-version.workspace = true
 [dependencies]
 squoosh-core = { path = "../core" }
 squoosh-codecs = { path = "../codecs" }
+squoosh-i18n = { path = "../i18n" }
 anyhow.workspace = true
 serde_json.workspace = true
 image.workspace = true
@@ -15,6 +16,8 @@ eframe = { version = "0.36.2", default-features = false, features = ["default_fo
 rfd = "0.17"
 crossbeam-channel = "0.5"
 resvg = "0.48"
+fontdb = "0.24"
+skrifa = "0.44"
 
 # Direct3D 12 on Windows (WARP when no GPU driver is present, e.g. in a VM
 # or over Remote Desktop), with Vulkan and OpenGL as fallbacks.
@@ -25,4 +28,5 @@ eframe = { version = "0.36.2", default-features = false, features = ["wgpu"] }
 winresource = "0.1"
 
 [features]
+# Adds the SQUOOSH_CAPTURE mode used for the README screenshots (see capture.rs).
 screenshot = ["eframe/__screenshot"]

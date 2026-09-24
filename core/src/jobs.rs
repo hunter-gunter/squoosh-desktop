@@ -5,6 +5,7 @@ use crate::{
 use anyhow::{Context, Result, ensure};
 use crossbeam_channel::{Receiver, Sender};
 use image::RgbaImage;
+use squoosh_i18n::t;
 use std::{
     collections::HashSet,
     fs,
@@ -120,7 +121,7 @@ fn collect(paths: Vec<PathBuf>, recursive: bool) -> Result<Vec<PathBuf>> {
         }
         ensure!(
             out.len() + pending.len() <= 100_000,
-            "Limite de 100 000 fichiers dépassée"
+            t("Limit of 100,000 files exceeded")
         );
     }
     out.sort();
@@ -168,9 +169,9 @@ pub fn write_output(
     bytes: &[u8],
     cancel: &AtomicBool,
 ) -> Result<PathBuf> {
-    ensure!(directory.is_dir(), "Le dossier de sortie n’existe pas");
+    ensure!(directory.is_dir(), t("The output folder does not exist"));
     let mut temp = tempfile::NamedTempFile::new_in(directory)
-        .context("Dossier de sortie non accessible en écriture")?;
+        .context(t("The output folder is not writable"))?;
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
     let stem = input.file_stem().unwrap_or(std::ffi::OsStr::new("image"));
@@ -296,7 +297,7 @@ impl Worker {
                                     let result = (|| -> Result<(PathBuf, u64)> {
                                         send(Event::Stage {
                                             id: task.id,
-                                            stage: "Lecture".into(),
+                                            stage: t("Reading").into(),
                                         });
                                         let source = pipeline::load(&task.path)?;
                                         let result = pipeline::convert(
@@ -313,7 +314,7 @@ impl Worker {
                                         )?;
                                         send(Event::Stage {
                                             id: task.id,
-                                            stage: "Écriture".into(),
+                                            stage: t("Writing").into(),
                                         });
                                         let output = write_output(
                                             &directory,
@@ -343,8 +344,7 @@ impl Worker {
                         Ok(false) => break,
                         Err(_) => {
                             send(Event::ImportError(
-                                "Erreur interne du traitement ; le moteur a été réinitialisé"
-                                    .into(),
+                                t("Internal processing error; the engine was restarted").into(),
                             ));
                             send(Event::BatchDone { cancelled: true });
                         }

@@ -9,6 +9,7 @@ rust-version.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+squoosh-i18n = { path = "../i18n" }
 image.workspace = true
 mozjpeg-sys = { version = "=2.2.4-beta.1", features = ["jpeg70_abi", "icc_io"] }
 oxipng = { version = "10.2", default-features = false, features = ["zopfli"] }

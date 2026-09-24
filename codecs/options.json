@@ -2,7 +2,7 @@
   "jpeg": [
     {
       "key": "quality",
-      "label": "Qualité",
+      "label": "Quality",
       "default": 75,
       "min": 0,
       "max": 100,
@@ -10,7 +10,7 @@
     },
     {
       "key": "baseline",
-      "label": "JPEG de base",
+      "label": "Baseline JPEG",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -18,7 +18,7 @@
     },
     {
       "key": "arithmetic",
-      "label": "Codage arithmétique",
+      "label": "Arithmetic coding",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -26,7 +26,7 @@
     },
     {
       "key": "progressive",
-      "label": "Progressif",
+      "label": "Progressive rendering",
       "default": 1,
       "min": 0,
       "max": 1,
@@ -34,7 +34,7 @@
     },
     {
       "key": "optimize_coding",
-      "label": "Optimiser le codage",
+      "label": "Optimize Huffman table",
       "default": 1,
       "min": 0,
       "max": 1,
@@ -42,7 +42,7 @@
     },
     {
       "key": "smoothing",
-      "label": "Lissage",
+      "label": "Smoothing",
       "default": 0,
       "min": 0,
       "max": 100,
@@ -50,37 +50,23 @@
     },
     {
       "key": "color_space",
-      "label": "Espace couleur",
+      "label": "Channels",
       "default": 3,
       "min": 1,
       "max": 3,
-      "choices": [
-        "Niveaux de gris",
-        "RGB",
-        "YCbCr"
-      ]
+      "choices": ["Grayscale", "RGB", "YCbCr"]
     },
     {
       "key": "quant_table",
-      "label": "Table de quantification",
+      "label": "Quantization table",
       "default": 3,
       "min": 0,
       "max": 8,
-      "choices": [
-        "JPEG Annex K",
-        "Plate",
-        "MSSIM Kodak",
-        "ImageMagick",
-        "PSNR-HVS-M Kodak",
-        "Klein et al",
-        "Watson et al",
-        "Ahumada et al",
-        "Peterson et al"
-      ]
+      "choices": ["JPEG Annex K", "Flat", "MSSIM-tuned Kodak", "ImageMagick", "PSNR-HVS-M-tuned Kodak", "Klein et al", "Watson et al", "Ahumada et al", "Peterson et al"]
     },
     {
       "key": "trellis_multipass",
-      "label": "Trellis multipasse",
+      "label": "Trellis multipass",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -88,7 +74,7 @@
     },
     {
       "key": "trellis_opt_zero",
-      "label": "Optimiser les zéros",
+      "label": "Optimize zero block runs",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -96,7 +82,7 @@
     },
     {
       "key": "trellis_opt_table",
-      "label": "Optimiser la table",
+      "label": "Optimize after trellis quantization",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -104,7 +90,7 @@
     },
     {
       "key": "trellis_loops",
-      "label": "Passes trellis",
+      "label": "Trellis quantization passes",
       "default": 1,
       "min": 1,
       "max": 50,
@@ -112,7 +98,7 @@
     },
     {
       "key": "auto_subsample",
-      "label": "Sous-échantillonnage automatique",
+      "label": "Auto subsample chroma",
       "default": 1,
       "min": 0,
       "max": 1,
@@ -120,7 +106,7 @@
     },
     {
       "key": "chroma_subsample",
-      "label": "Facteur chromatique",
+      "label": "Subsample chroma by",
       "default": 2,
       "min": 1,
       "max": 4,
@@ -128,7 +114,7 @@
     },
     {
       "key": "separate_chroma_quality",
-      "label": "Qualité chromatique distincte",
+      "label": "Separate chroma quality",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -136,7 +122,7 @@
     },
     {
       "key": "chroma_quality",
-      "label": "Qualité chromatique",
+      "label": "Chroma quality",
       "default": 75,
       "min": 0,
       "max": 100,
@@ -146,7 +132,7 @@
   "png": [
     {
       "key": "level",
-      "label": "Niveau d’optimisation",
+      "label": "Optimization level",
       "default": 2,
       "min": 0,
       "max": 6,
@@ -154,7 +140,7 @@
     },
     {
       "key": "interlace",
-      "label": "Entrelacement",
+      "label": "Interlace",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -164,7 +150,7 @@
   "webp": [
     {
       "key": "quality",
-      "label": "Qualité",
+      "label": "Quality",
       "default": 75,
       "min": 0,
       "max": 100,
@@ -172,7 +158,7 @@
     },
     {
       "key": "target_size",
-      "label": "Taille cible (octets)",
+      "label": "Target size (bytes)",
       "default": 0,
       "min": 0,
       "max": 2147483647,
@@ -180,7 +166,7 @@
     },
     {
       "key": "target_PSNR",
-      "label": "PSNR cible",
+      "label": "Target PSNR",
       "default": 0,
       "min": 0,
       "max": 100,
@@ -196,7 +182,7 @@
     },
     {
       "key": "sns_strength",
-      "label": "Mise en forme du bruit",
+      "label": "Spatial noise shaping",
       "default": 50,
       "min": 0,
       "max": 100,
@@ -204,7 +190,7 @@
     },
     {
       "key": "filter_strength",
-      "label": "Force du filtre",
+      "label": "Filter strength",
       "default": 60,
       "min": 0,
       "max": 100,
@@ -212,7 +198,7 @@
     },
     {
       "key": "filter_sharpness",
-      "label": "Netteté du filtre",
+      "label": "Filter sharpness",
       "default": 0,
       "min": 0,
       "max": 7,
@@ -220,7 +206,7 @@
     },
     {
       "key": "filter_type",
-      "label": "Filtre fort",
+      "label": "Strong filter",
       "default": 1,
       "min": 0,
       "max": 1,
@@ -252,7 +238,7 @@
     },
     {
       "key": "show_compressed",
-      "label": "Reconstruction compressée",
+      "label": "Show compressed",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -260,19 +246,15 @@
     },
     {
       "key": "preprocessing",
-      "label": "Prétraitement",
+      "label": "Preprocessing",
       "default": 0,
       "min": 0,
       "max": 2,
-      "choices": [
-        "Aucun",
-        "Lissage des segments",
-        "Tramage pseudo-aléatoire"
-      ]
+      "choices": ["None", "Segment smoothing", "Pseudo-random dithering"]
     },
     {
       "key": "autofilter",
-      "label": "Filtre automatique",
+      "label": "Auto adjust filter strength",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -280,7 +262,7 @@
     },
     {
       "key": "partition_limit",
-      "label": "Limite de partition",
+      "label": "Partition quality limit",
       "default": 0,
       "min": 0,
       "max": 100,
@@ -288,7 +270,7 @@
     },
     {
       "key": "alpha_compression",
-      "label": "Compresser l’alpha",
+      "label": "Compress alpha",
       "default": 1,
       "min": 0,
       "max": 1,
@@ -296,7 +278,7 @@
     },
     {
       "key": "alpha_filtering",
-      "label": "Filtrage alpha",
+      "label": "Alpha filtering",
       "default": 1,
       "min": 0,
       "max": 2,
@@ -304,7 +286,7 @@
     },
     {
       "key": "alpha_quality",
-      "label": "Qualité alpha",
+      "label": "Alpha quality",
       "default": 100,
       "min": 0,
       "max": 100,
@@ -312,7 +294,7 @@
     },
     {
       "key": "lossless",
-      "label": "Sans perte",
+      "label": "Lossless",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -320,7 +302,7 @@
     },
     {
       "key": "exact",
-      "label": "Préserver les couleurs transparentes",
+      "label": "Preserve transparent data",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -328,20 +310,15 @@
     },
     {
       "key": "image_hint",
-      "label": "Type d’image",
+      "label": "Image type",
       "default": 0,
       "min": 0,
       "max": 3,
-      "choices": [
-        "Défaut",
-        "Illustration",
-        "Photo",
-        "Graphique"
-      ]
+      "choices": ["Default", "Picture", "Photo", "Graph"]
     },
     {
       "key": "emulate_jpeg_size",
-      "label": "Imiter la taille JPEG",
+      "label": "Emulate JPEG size",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -349,7 +326,7 @@
     },
     {
       "key": "thread_level",
-      "label": "Multithread",
+      "label": "Multithreading",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -357,7 +334,7 @@
     },
     {
       "key": "low_memory",
-      "label": "Mémoire réduite",
+      "label": "Low memory",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -365,7 +342,7 @@
     },
     {
       "key": "near_lossless",
-      "label": "Fidélité presque sans perte",
+      "label": "Near-lossless fidelity",
       "default": 100,
       "min": 0,
       "max": 100,
@@ -373,7 +350,7 @@
     },
     {
       "key": "use_delta_palette",
-      "label": "Palette delta (réservé par libwebp)",
+      "label": "Delta palette (reserved by libwebp)",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -391,7 +368,7 @@
   "avif": [
     {
       "key": "quality",
-      "label": "Qualité",
+      "label": "Quality",
       "default": 50,
       "min": 0,
       "max": 100,
@@ -399,7 +376,7 @@
     },
     {
       "key": "qualityAlpha",
-      "label": "Qualité alpha (−1 : liée)",
+      "label": "Alpha quality (−1: linked)",
       "default": -1,
       "min": -1,
       "max": 100,
@@ -407,7 +384,7 @@
     },
     {
       "key": "denoiseLevel",
-      "label": "Débruitage",
+      "label": "Noise synthesis",
       "default": 0,
       "min": 0,
       "max": 50,
@@ -415,7 +392,7 @@
     },
     {
       "key": "tileColsLog2",
-      "label": "Colonnes de tuiles (log₂)",
+      "label": "Log2 of tile columns",
       "default": 0,
       "min": 0,
       "max": 6,
@@ -423,7 +400,7 @@
     },
     {
       "key": "tileRowsLog2",
-      "label": "Lignes de tuiles (log₂)",
+      "label": "Log2 of tile rows",
       "default": 0,
       "min": 0,
       "max": 6,
@@ -431,7 +408,7 @@
     },
     {
       "key": "speed",
-      "label": "Vitesse",
+      "label": "Speed",
       "default": 6,
       "min": 0,
       "max": 10,
@@ -439,20 +416,15 @@
     },
     {
       "key": "subsample",
-      "label": "Sous-échantillonnage",
+      "label": "Subsample chroma",
       "default": 1,
       "min": 0,
       "max": 3,
-      "choices": [
-        "4:0:0",
-        "4:2:0",
-        "4:2:2",
-        "4:4:4"
-      ]
+      "choices": ["4:0:0", "4:2:0", "4:2:2", "4:4:4"]
     },
     {
       "key": "chromaDeltaQ",
-      "label": "Quantification chromatique distincte",
+      "label": "Extra chroma compression",
       "default": 0,
       "min": 0,
       "max": 1,
@@ -460,7 +432,7 @@
     },
     {
       "key": "sharpness",
-      "label": "Netteté",
+      "label": "Sharpness",
       "default": 0,
       "min": 0,
       "max": 7,
@@ -468,15 +440,11 @@
     },
     {
       "key": "tune",
-      "label": "Optimisation",
+      "label": "Tuning",
       "default": 0,
       "min": 0,
       "max": 2,
-      "choices": [
-        "Auto",
-        "PSNR",
-        "SSIM"
-      ]
+      "choices": ["Auto", "PSNR", "SSIM"]
     },
     {
       "key": "enableSharpYUV",

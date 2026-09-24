@@ -1,6 +1,6 @@
 {
   "name": "squoosh-desktop",
-  "description": "Bibliothèques C de la version Windows, liées statiquement (triplet x64-windows-static). La version de vcpkg est fixée dans scripts/windows.ps1.",
+  "description": "C libraries of the Windows build, linked statically (x64-windows-static triplet). The vcpkg revision is pinned in scripts/windows.ps1.",
   "dependencies": [
     {
       "name": "libavif",

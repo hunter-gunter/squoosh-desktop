@@ -1,30 +1,43 @@
-# Licences et provenance
+# Licenses and provenance
 
-Ce projet est dérivé de [Squoosh](https://github.com/GoogleChromeLabs/squoosh), copyright Google Inc. Le code et les ressources qui en sont repris, et les adaptations de ses wrappers, portent la licence Apache-2.0 (voir `LICENSE-APACHE-2.0`).
+This project is derived from [Squoosh](https://github.com/GoogleChromeLabs/squoosh), copyright Google Inc. The code and assets taken from it, and the adaptations of its wrappers, are licensed under Apache-2.0 (see `LICENSE-APACHE-2.0`).
 
-Le binaire distribué avec imagequant est soumis à GPL-3.0-or-later. La licence Apache-2.0 des fichiers originaux est conservée. Le fichier `LICENSE` (GPL-3.0) accompagne le paquet. Distribuer le binaire avec l’archive de sources correspondantes générée par `scripts/source.sh` ; cette archive contient les versions exactes des dépendances Cargo et permet aussi de reconstruire/recombiner HQX.
+A binary built with imagequant is covered by GPL-3.0-or-later. The Apache-2.0 license of the original files is kept. The `LICENSE` file (GPL-3.0) ships with every package. Distribute the binary together with the corresponding source archive produced by `scripts/source.sh`; that archive contains the exact versions of the Cargo dependencies and also makes it possible to rebuild or relink HQX.
 
-Principales dépendances :
+Main dependencies:
 
-| Composant | Licence | Usage |
+| Component | License | Use |
 |---|---|---|
-| egui / eframe | MIT ou Apache-2.0 | Interface et rendu |
-| image | MIT ou Apache-2.0 | Images et formats matriciels |
-| mozjpeg-sys / MozJPEG | IJG, BSD-3-Clause, Zlib | JPEG, bibliothèque intégrée au binaire |
-| libwebp | BSD-3-Clause | WebP, bibliothèque du système (intégrée sous Windows) |
-| libavif | BSD-2-Clause | AVIF, bibliothèque du système (intégrée sous Windows) |
-| libyuv | BSD-3-Clause | Conversions YUV de libavif, intégrée sous Windows |
-| AOM | BSD-2-Clause et licence de brevets AOM | Encodage AV1 via libavif |
-| OxiPNG | MIT | Optimisation PNG |
-| resvg / usvg / tiny-skia | MIT ou Apache-2.0 / BSD-3-Clause selon composant | SVG |
-| resize | MIT | Filtres de redimensionnement |
-| HQX | LGPL-2.1-or-later | Agrandissement de pixel art |
-| imagequant | GPL-3.0-or-later | Quantification et tramage |
-| Little CMS 2 | MIT | Conversion ICC, bibliothèque du système (intégrée sous Windows) |
-| rfd | MIT | Dialogues de fichiers |
+| egui / eframe | MIT or Apache-2.0 | Interface and rendering |
+| image | MIT or Apache-2.0 | Raster images and formats |
+| mozjpeg-sys / MozJPEG | IJG, BSD-3-Clause, Zlib | JPEG, library built into the binary |
+| libwebp | BSD-3-Clause | WebP, system library (built in on Windows) |
+| libavif | BSD-2-Clause | AVIF, system library (built in on Windows) |
+| libyuv | BSD-3-Clause | YUV conversions for libavif, built in on Windows |
+| AOM | BSD-2-Clause and AOM patent license | AV1 encoding through libavif |
+| OxiPNG | MIT | PNG optimization |
+| resvg / usvg / tiny-skia | MIT or Apache-2.0 / BSD-3-Clause depending on the component | SVG |
+| resize | MIT | Resize filters |
+| HQX | LGPL-2.1-or-later | Pixel-art upscaling |
+| imagequant | GPL-3.0-or-later | Quantization and dithering |
+| Little CMS 2 | MIT | ICC conversion, system library (built in on Windows) |
+| rfd | MIT | File dialogs |
+| sys-locale | MIT or Apache-2.0 | System language detection |
+| fontdb / skrifa | MIT or Apache-2.0 | Finding system fonts for Chinese, Japanese, Korean and Vietnamese |
 
-`Cargo.lock` fixe les versions. Les licences complètes des dépendances Cargo sont incluses avec leurs sources dans `vendor/` de l’archive de distribution. Les paquets Debian/Arch des bibliothèques système fournissent leurs propres notices et sources selon les mécanismes de la distribution. Sous Windows, libwebp, libavif, AOM, libyuv et Little CMS sont compilées par vcpkg (révision fixée dans `scripts/windows.ps1`) et liées statiquement ; leurs notices sont copiées dans le dossier `licenses/` de l’archive et de l’installation.
+`Cargo.lock` pins the versions. The full licenses of the Cargo dependencies ship with their sources in the `vendor/` directory of the source archive. The Debian and Arch packages of the system libraries provide their own notices and sources through the distribution's mechanisms. On Windows, libwebp, libavif, AOM, libyuv and Little CMS are built by vcpkg (revision pinned in `scripts/windows.ps1`) and linked statically; their notices are copied to the `licenses/` folder of the archive and of the installation.
 
-Les préréglages, algorithmes de rotation/redimensionnement, mode ZX et adaptateurs d’encodage sont dérivés du code source de Squoosh, copyright Google Inc., Apache-2.0. Les tables de quantification JPEG sont celles de MozJPEG.
+The presets, rotation and resize algorithms, ZX mode and encoder adapters are derived from the Squoosh source code, copyright Google Inc., Apache-2.0. The JPEG quantization tables are MozJPEG's.
 
-L’interface reprend les ressources graphiques de l’application web, copyright Google Inc., Apache-2.0 : icônes SVG (`src/client/lazy-app/icons` et composants de Squoosh, recopiées dans `app/src/icons.rs`), logo (`app/assets/logo-with-text.svg`, dont le texte a été converti en tracés) et le sous-ensemble de chiffres de Roboto Mono embarqué par le web (`app/assets/roboto-mono-numbers.ttf`, Apache-2.0), icône d’application (`app/assets/icon.png`). Les quelques icônes propres à la version bureau (dossier, corbeille, menu, fermeture, alerte) viennent de Material Icons, Apache-2.0.
+The interface reuses the web app's graphic assets, copyright Google Inc., Apache-2.0: SVG icons (`src/client/lazy-app/icons` and Squoosh components, copied into `app/src/icons.rs`), the logo (`app/assets/logo-with-text.svg`, with its text converted to paths), the subset of Roboto Mono digits embedded by the web app (`app/assets/roboto-mono-numbers.ttf`, Apache-2.0) and the application icon (`app/assets/icon.png`). The few desktop-only icons (folder, trash, menu, close, warning) come from Material Icons, Apache-2.0.
+
+## Screenshot photos
+
+The photos shown in `docs/screenshots/` come from Wikimedia Commons and are not part of the application:
+
+| Photo | Author | License |
+|---|---|---|
+| [Macaw parrot sitting on a tree branch](https://commons.wikimedia.org/wiki/File:Macaw_parrot_sitting_on_a_tree_branch.jpg_.jpg) | Christopher Kuszajewski | CC0 |
+| [USA Antelope-Canyon](https://commons.wikimedia.org/wiki/File:USA_Antelope-Canyon.jpg) | Lucas Löffler | Public domain |
+| [Colorful thermophiles at Grand Prismatic Spring](https://commons.wikimedia.org/wiki/File:Colorful_thermophiles_at_Grand_Prismatic_Spring_(33669630821).jpg) | NPS / Neal Herbert | Public domain |
+| [Grand Prismatic Spring and boardwalk](https://commons.wikimedia.org/wiki/File:Grand_Prismatic_Spring_and_boardwalk.jpg) | NPS / Jacob W. Frank | Public domain |

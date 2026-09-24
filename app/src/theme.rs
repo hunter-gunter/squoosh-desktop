@@ -145,6 +145,15 @@ pub fn install(ctx: &egui::Context) {
     style.spacing.menu_margin = egui::Margin::same(4);
     style.interaction.selectable_labels = false;
 
+    ctx.set_fonts(font_definitions());
+
+    ctx.set_style_of(egui::Theme::Dark, style.clone());
+    ctx.set_style_of(egui::Theme::Light, style);
+    ctx.set_theme(egui::Theme::Dark);
+}
+
+/// egui's fonts plus the digits of the results bubble.
+pub fn font_definitions() -> egui::FontDefinitions {
     // The results bubble uses Roboto Mono for its digits, like the web.
     let mut fonts = egui::FontDefinitions::default();
     fonts.font_data.insert(
@@ -158,11 +167,7 @@ pub fn install(ctx: &egui::Context) {
     fonts
         .families
         .insert(egui::FontFamily::Name("numbers".into()), numbers);
-    ctx.set_fonts(fonts);
-
-    ctx.set_style_of(egui::Theme::Dark, style.clone());
-    ctx.set_style_of(egui::Theme::Light, style);
-    ctx.set_theme(egui::Theme::Dark);
+    fonts
 }
 
 /// egui ships no bold face, so faux-bold by over-painting with a small offset.
@@ -651,13 +656,21 @@ pub enum ButtonKind {
 
 /// A Squoosh-style flat button, used by the desktop-only panels.
 pub fn button(ui: &mut Ui, text: &str, kind: ButtonKind, full_width: bool) -> Response {
-    let font = FontId::proportional(BODY);
-    let galley = ui.painter().layout_no_wrap(text.into(), font, WHITE);
+    let layout = |size: f32| {
+        ui.painter()
+            .layout_no_wrap(text.into(), FontId::proportional(size), WHITE)
+    };
+    let mut galley = layout(BODY);
     let width = if full_width {
         ui.available_width()
     } else {
         galley.size().x + 24.0
     };
+    // Long translations shrink to fit instead of spilling out of the button.
+    let room = width - 12.0;
+    if galley.size().x > room {
+        galley = layout((BODY * room / galley.size().x).max(SMALL * 0.8));
+    }
     let (rect, response) = ui.allocate_exact_size(vec2(width, 32.0), Sense::click());
     let enabled = ui.is_enabled();
     let fill = match kind {

@@ -21,7 +21,7 @@ fn main() {
         .include(&out)
         .flag_if_supported("-std=c11")
         // MSVC reads sources in the ANSI code page unless told otherwise,
-        // which would garble the French error messages.
+        // which would garble non-ASCII characters.
         .flag_if_supported("/utf-8");
     for path in
         env::split_paths(&env::var_os("DEP_JPEG_INCLUDE").expect("MozJPEG include directories"))
@@ -53,7 +53,7 @@ fn main() {
 /// (see `vcpkg.json`), so the executable needs no third-party DLL.
 fn link_msvc_prefix(build: &mut cc::Build) {
     let prefix = PathBuf::from(env::var_os("SQUOOSH_NATIVE_PREFIX").expect(
-        "SQUOOSH_NATIVE_PREFIX doit désigner vcpkg_installed/x64-windows-static (voir scripts/windows.ps1)",
+        "SQUOOSH_NATIVE_PREFIX must point to vcpkg_installed/x64-windows-static (see scripts/windows.ps1)",
     ));
     let lib = prefix.join("lib");
     // After MozJPEG's directories: the tree also holds libjpeg-turbo's
@@ -75,7 +75,7 @@ fn link_msvc_prefix(build: &mut cc::Build) {
     ] {
         match names.iter().find(|n| lib.join(format!("{n}.lib")).exists()) {
             Some(name) => println!("cargo:rustc-link-lib=static={name}"),
-            None => assert!(!required, "{}.lib absent de {}", names[0], lib.display()),
+            None => assert!(!required, "{}.lib not found in {}", names[0], lib.display()),
         }
     }
 }

@@ -1,7 +1,8 @@
 name: Release
 
-# Pousser un tag v<version de Cargo.toml> (ex. `git tag v0.2.0 && git push
-# origin v0.2.0`) construit tous les paquets et publie une Release GitHub.
+# Pushing a v<Cargo.toml version> tag (e.g. `git tag v0.2.0 && git push
+# origin v0.2.0`) builds every package and publishes a GitHub Release whose
+# notes come from the version's CHANGELOG.md entry.
 on:
   push:
     tags: ['v*']
@@ -14,13 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Vérifier que le tag correspond à la version du projet
+      - name: Check that the tag matches the project version
         run: |
           version=$(./scripts/version.sh)
           if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
-            echo "::error::Le tag $GITHUB_REF_NAME ne correspond pas à la version $version de Cargo.toml"
+            echo "::error::Tag $GITHUB_REF_NAME does not match version $version in Cargo.toml"
             exit 1
           fi
+      - name: Check that the changelog has an entry for this version
+        run: ./scripts/release-notes.sh "${GITHUB_REF_NAME#v}" > /dev/null
 
   linux:
     needs: version
@@ -36,20 +39,25 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
-      - name: Sommes de contrôle
+      - name: Checksums
         working-directory: dist
         run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
-      - name: Publier la Release
+      - name: Release notes
+        run: ./scripts/release-notes.sh "${GITHUB_REF_NAME#v}" > notes.md && cat notes.md
+      - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # A tag such as v0.2.0-beta.1 is published as a pre-release.
+          # A tag such as v0.2.0-beta.1 is published as a pre-release. The
+          # changelog entry comes first; GitHub appends its generated notes
+          # (merged pull requests, contributors, full changelog link).
           prerelease=$(case "$GITHUB_REF_NAME" in *-*) echo --prerelease;; esac)
           gh release create "$GITHUB_REF_NAME" dist/* \
             --repo "$GITHUB_REPOSITORY" \
             --title "Squoosh Desktop ${GITHUB_REF_NAME#v}" \
-            --generate-notes --verify-tag $prerelease
+            --notes-file notes.md --generate-notes --verify-tag $prerelease

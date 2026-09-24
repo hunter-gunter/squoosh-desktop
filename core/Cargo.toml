@@ -7,6 +7,7 @@ rust-version.workspace = true
 
 [dependencies]
 squoosh-codecs = { path = "../codecs" }
+squoosh-i18n = { path = "../i18n" }
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true

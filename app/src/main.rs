@@ -1,6 +1,9 @@
 // No console window next to the GUI on Windows.
 #![cfg_attr(windows, windows_subsystem = "windows")]
+#[cfg(feature = "screenshot")]
+mod capture;
 mod controls;
+mod fonts;
 mod icons;
 mod theme;
 
@@ -12,6 +15,7 @@ use squoosh_core::{
     jobs::{Command, Event, PreviewSide, Task, Worker},
     settings::{Filter, Overrides, Settings, Side},
 };
+use squoosh_i18n::{Lang, t, tr};
 use std::{
     collections::{HashSet, VecDeque},
     path::PathBuf,
@@ -23,11 +27,33 @@ use std::{
 };
 use theme::{Icon, Theme};
 
+/// Where an image stands in the list, rendered in the current language.
+enum Status {
+    Ready,
+    Waiting,
+    /// A step reported by the engine, already translated.
+    Stage(String),
+    Done(u64),
+    Error(String),
+    Cancelled,
+}
+impl Status {
+    fn text(&self) -> String {
+        match self {
+            Self::Ready => t("Ready").into(),
+            Self::Waiting => t("Waiting").into(),
+            Self::Stage(stage) => stage.clone(),
+            Self::Done(bytes) => tr!("Done · {}", size(*bytes)),
+            Self::Error(error) => tr!("Error: {error}", error = error),
+            Self::Cancelled => t("Cancelled").into(),
+        }
+    }
+}
 struct Entry {
     id: u64,
     path: PathBuf,
     overrides: Overrides,
-    status: String,
+    status: Status,
     output: Option<PathBuf>,
     bytes: Option<u64>,
     dimensions: Option<(u32, u32)>,
@@ -141,6 +167,11 @@ struct App {
     checker: Option<TextureHandle>,
     /// Scale that fits the image in the viewport, for the zoom readout.
     fit_scale: f32,
+    fonts: fonts::Fonts,
+    /// Whether the fonts of every language are loaded, for the picker.
+    all_fonts: bool,
+    #[cfg(feature = "screenshot")]
+    capture: Option<capture::Capture>,
 }
 /// The two-up bar width, grip radius and grab band, as in `two-up`.
 const SPLIT_BAR: f32 = 10.;
@@ -154,13 +185,41 @@ fn size(bytes: u64) -> String {
     let (value, unit) = theme::pretty_bytes(bytes);
     format!("{value} {unit}")
 }
+/// Where the chosen language is remembered: the only file the application
+/// writes outside the output folder, and only once the language is changed.
+fn language_file() -> Option<PathBuf> {
+    #[cfg(windows)]
+    let base = std::env::var_os("APPDATA").map(PathBuf::from);
+    #[cfg(not(windows))]
+    let base = std::env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute())
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")));
+    Some(base?.join("squoosh-desktop").join("language"))
+}
+/// `SQUOOSH_LANG`, then the saved choice, then the system language.
+fn initial_language() -> Lang {
+    Lang::from_env()
+        .or_else(|| {
+            let saved = std::fs::read_to_string(language_file()?).ok()?;
+            Lang::from_locale(saved.trim())
+        })
+        .unwrap_or_else(Lang::system)
+}
+fn save_language(lang: Lang) {
+    if let Some(path) = language_file() {
+        let _ = std::fs::create_dir_all(path.parent().unwrap())
+            .and_then(|()| std::fs::write(&path, lang.code()));
+    }
+}
 impl App {
     fn new(cc: &eframe::CreationContext<'_>, paths: Vec<PathBuf>) -> Self {
         let ctx = cc.egui_ctx.clone();
         let worker = Worker::new(move || ctx.request_repaint());
         theme::install(&cc.egui_ctx);
         let (dialog_tx, dialogs) = crossbeam_channel::unbounded();
-        let app = Self {
+        #[cfg_attr(not(feature = "screenshot"), allow(unused_mut))]
+        let mut app = Self {
             ctx: cc.egui_ctx.clone(),
             worker,
             entries: Vec::new(),
@@ -196,7 +255,19 @@ impl App {
             aliasing: false,
             checker: None,
             fit_scale: 1.,
+            fonts: fonts::Fonts::default(),
+            all_fonts: false,
+            #[cfg(feature = "screenshot")]
+            capture: capture::Capture::from_env(),
         };
+        // A saved or system language without a font on this system
+        // falls back to English.
+        if !app.fonts.available(squoosh_i18n::lang()) {
+            squoosh_i18n::set_lang(Lang::En);
+        }
+        app.fonts.install(&app.ctx, squoosh_i18n::lang(), false);
+        #[cfg(feature = "screenshot")]
+        app.capture_setup();
         if !paths.is_empty() {
             app.command(Command::Import {
                 paths,
@@ -266,9 +337,9 @@ impl App {
             let dialog = rfd::FileDialog::new();
             let result = match kind {
                 0 => dialog
-                    .set_title("Ajouter des images")
+                    .set_title(t("Add images"))
                     .add_filter(
-                        "Images",
+                        t("Images"),
                         &[
                             "jpg", "jpeg", "png", "webp", "avif", "svg", "gif", "bmp", "tif",
                             "tiff",
@@ -277,18 +348,18 @@ impl App {
                     .pick_files()
                     .map(Dialog::Import),
                 1 => dialog
-                    .set_title("Ajouter un dossier")
+                    .set_title(t("Add a folder"))
                     .pick_folder()
                     .map(|p| Dialog::Import(vec![p])),
                 2 => dialog
-                    .set_title("Dossier de sortie")
+                    .set_title(t("Output folder"))
                     .pick_folder()
                     .map(Dialog::Directory),
                 3 | 4 => {
                     let index = usize::from(kind == 4);
                     dialog
-                        .set_title("Réglages du côté")
-                        .add_filter("Réglages Squoosh", &["json"])
+                        .set_title(t("Side settings"))
+                        .add_filter(t("Squoosh settings"), &["json"])
                         .set_file_name("squoosh-side.json")
                         .save_file()
                         .map(|p| Dialog::SaveSide(index, p))
@@ -296,8 +367,8 @@ impl App {
                 _ => {
                     let index = usize::from(kind == 6);
                     dialog
-                        .set_title("Importer des réglages")
-                        .add_filter("Réglages Squoosh", &["json"])
+                        .set_title(t("Import settings"))
+                        .add_filter(t("Squoosh settings"), &["json"])
                         .pick_file()
                         .map(|p| Dialog::LoadSide(index, p))
                 }
@@ -324,7 +395,7 @@ impl App {
                 }
                 Dialog::DirectoryCancelled => {
                     if self.pending_export.take().is_some() {
-                        self.set_message("Export annulé : aucun dossier de sortie choisi.");
+                        self.set_message(t("Export cancelled: no output folder chosen."));
                     }
                 }
                 Dialog::SaveSide(index, path) => {
@@ -334,10 +405,10 @@ impl App {
                         .and_then(|bytes| std::fs::write(&path, bytes).map_err(|e| e.to_string()))
                     {
                         Ok(()) => {
-                            self.set_message(format!("Réglages enregistrés : {}", path.display()));
+                            self.set_message(tr!("Settings saved: {}", path.display()));
                         }
                         Err(error) => {
-                            self.set_message(format!("Enregistrement impossible : {error}"));
+                            self.set_message(tr!("Cannot save: {error}", error = error));
                         }
                     }
                 }
@@ -356,9 +427,11 @@ impl App {
                             let before = settings.clone();
                             settings.sides[index] = side;
                             self.apply(before, settings);
-                            self.set_message("Réglages importés.");
+                            self.set_message(t("Settings imported."));
                         }
-                        Err(error) => self.set_message(format!("Import impossible : {error}")),
+                        Err(error) => {
+                            self.set_message(tr!("Cannot import: {error}", error = error))
+                        }
                     }
                 }
             }
@@ -379,7 +452,7 @@ impl App {
                                 id: self.next_id,
                                 path,
                                 overrides: Overrides::default(),
-                                status: "Prête".into(),
+                                status: Status::Ready,
                                 output: None,
                                 bytes: None,
                                 dimensions: None,
@@ -399,9 +472,9 @@ impl App {
                         self.drawer = true;
                     }
                     self.set_message(if self.entries.len() == 1 {
-                        "1 image dans la liste".into()
+                        t("1 image in the list").into()
                     } else {
-                        format!("{} images dans la liste", self.entries.len())
+                        tr!("{} images in the list", self.entries.len())
                     });
                 }
                 Event::ImportError(error) => self.set_message(error),
@@ -436,7 +509,7 @@ impl App {
                 }
                 Event::InspectError { id, error } => {
                     if let Some(e) = self.entries.iter_mut().find(|e| e.id == id) {
-                        e.status = format!("Erreur : {error}");
+                        e.status = Status::Error(error);
                     }
                 }
                 Event::Preview {
@@ -470,7 +543,7 @@ impl App {
                 }
                 Event::Stage { id, stage } => {
                     if let Some(e) = self.entries.iter_mut().find(|e| e.id == id) {
-                        e.status = stage;
+                        e.status = Status::Stage(stage);
                     }
                 }
                 Event::Finished { id, result } => {
@@ -479,10 +552,10 @@ impl App {
                     if let Some(e) = self.entries.iter_mut().find(|e| e.id == id) {
                         match result {
                             Ok((path, bytes)) => {
-                                e.status = format!("Terminée · {}", size(bytes));
+                                e.status = Status::Done(bytes);
                                 e.output = Some(path);
                             }
-                            Err(error) => e.status = format!("Erreur : {error}"),
+                            Err(error) => e.status = Status::Error(error),
                         }
                     }
                 }
@@ -490,14 +563,14 @@ impl App {
                     self.batch = false;
                     for e in &mut self.entries {
                         if self.batch_ids.contains(&e.id) {
-                            e.status = "Annulée".into();
+                            e.status = Status::Cancelled;
                         }
                     }
                     self.batch_ids.clear();
                     self.set_message(if cancelled {
-                        "Lot annulé. Les fichiers déjà écrits sont conservés.".into()
+                        t("Batch cancelled. Files already written are kept.").into()
                     } else {
-                        format!("Lot terminé : {} fichiers traités.", self.done)
+                        tr!("Batch done: {} files processed.", self.done)
                     });
                     self.changed();
                 }
@@ -578,9 +651,9 @@ impl App {
             .iter()
             .any(|t| t.settings.sides[t.settings.export_side].format.is_none())
         {
-            self.set_message(
-                "Choisissez un format pour le côté exporté (l’image originale ne s’exporte pas).",
-            );
+            self.set_message(t(
+                "Choose a format for the exported side (the original image is not exported).",
+            ));
             return;
         }
         self.batch_ids = tasks.iter().map(|t| t.id).collect();
@@ -590,7 +663,7 @@ impl App {
         self.cancel = Arc::new(AtomicBool::new(false));
         for e in &mut self.entries {
             if self.batch_ids.contains(&e.id) {
-                e.status = "En attente".into();
+                e.status = Status::Waiting;
                 e.output = None;
             }
         }
@@ -787,7 +860,7 @@ impl App {
                         let zoom = theme::group_button(
                             ui,
                             None,
-                            Some(&format!("{percent} %")),
+                            Some(&tr!("{percent}%", percent = percent)),
                             false,
                             false,
                             false,
@@ -795,7 +868,7 @@ impl App {
                         if zoom.clicked() {
                             self.fit();
                         }
-                        zoom.on_hover_text("Cliquer pour ajuster à la fenêtre");
+                        zoom.on_hover_text(t("Click to fit the window"));
                         if theme::group_button(ui, Some(Icon::Plus), None, false, true, false)
                             .clicked()
                         {
@@ -809,7 +882,7 @@ impl App {
                     |ui| {
                         ui.spacing_mut().item_spacing.x = 0.;
                         if theme::group_button(ui, Some(Icon::Rotate), None, true, false, false)
-                            .on_hover_text("Pivoter")
+                            .on_hover_text(t("Rotate"))
                             .clicked()
                         {
                             *rotation = (*rotation + 90) % 360;
@@ -821,7 +894,7 @@ impl App {
                             Icon::Aliasing
                         };
                         if theme::group_button(ui, Some(icon), None, false, false, self.aliasing)
-                            .on_hover_text("Lissage de l\u{2019}aperçu")
+                            .on_hover_text(t("Preview smoothing"))
                             .clicked()
                         {
                             self.aliasing = !self.aliasing;
@@ -845,7 +918,7 @@ impl App {
                             true,
                             self.alt_background,
                         )
-                        .on_hover_text("Fond clair / sombre")
+                        .on_hover_text(t("Light / dark background"))
                         .clicked()
                         {
                             self.alt_background = !self.alt_background;
@@ -937,19 +1010,19 @@ impl App {
                             |ui| {
                                 let color = theme.header_text;
                                 if theme::title_icon_button(ui, Icon::Import, color, true)
-                                    .on_hover_text("Importer des réglages")
+                                    .on_hover_text(t("Import settings"))
                                     .clicked()
                                 {
                                     actions.push(Action::LoadSide(index));
                                 }
                                 if theme::title_icon_button(ui, Icon::Save, color, true)
-                                    .on_hover_text("Enregistrer les réglages")
+                                    .on_hover_text(t("Save settings"))
                                     .clicked()
                                 {
                                     actions.push(Action::SaveSide(index));
                                 }
                                 if theme::title_icon_button(ui, Icon::Swap, color, true)
-                                    .on_hover_text("Copier vers l\u{2019}autre côté")
+                                    .on_hover_text(t("Copy to the other side"))
                                     .clicked()
                                 {
                                     actions.push(Action::CopySide(index));
@@ -1240,11 +1313,11 @@ impl App {
             ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
         }
         let response = if original {
-            response.on_hover_text("L’image originale ne s’exporte pas")
+            response.on_hover_text(t("The original image cannot be exported"))
         } else if exporting {
-            response.on_hover_text("Exporter ce côté dans le dossier de sortie")
+            response.on_hover_text(t("Export this side to the output folder"))
         } else {
-            response.on_hover_text("Choisir ce côté pour l’export, puis exporter")
+            response.on_hover_text(t("Pick this side for export, then export"))
         };
         if response.clicked() && !original {
             actions.push(Action::Export(index));
@@ -1301,7 +1374,7 @@ impl App {
                         // Header, in the black "original image" title style.
                         theme::options_title(
                             ui,
-                            &format!("Images · {}", self.entries.len()),
+                            &tr!("Images · {}", self.entries.len()),
                             Theme::LEFT,
                             true,
                             CornerRadius {
@@ -1317,28 +1390,31 @@ impl App {
                                     theme::WHITE,
                                     !self.batch && !self.entries.is_empty(),
                                 )
-                                .on_hover_text("Vider la liste")
+                                .on_hover_text(t("Clear the list"))
                                 .clicked()
                                     && !self.batch
                                 {
                                     clear = true;
                                 }
                                 if theme::title_icon_button(ui, Icon::Folder, theme::WHITE, true)
-                                    .on_hover_text("Ajouter un dossier")
+                                    .on_hover_text(t("Add a folder"))
                                     .clicked()
                                 {
                                     self.dialog(1, ctx);
                                 }
                                 if theme::title_icon_button(ui, Icon::AddImage, theme::WHITE, true)
-                                    .on_hover_text("Ajouter des images")
+                                    .on_hover_text(t("Add images"))
                                     .clicked()
                                 {
                                     self.dialog(0, ctx);
                                 }
                             },
                         );
-                        theme::row_toggle(ui, "Inclure les sous-dossiers", |ui| {
+                        theme::row_toggle(ui, t("Include subfolders"), |ui| {
                             theme::checkbox(ui, &mut self.recursive, Theme::LEFT);
+                        });
+                        theme::row_toggle(ui, t("Language"), |ui| {
+                            ui.allocate_ui(vec2(150., 26.), |ui| self.language_picker(ui));
                         });
                         theme::rule(ui);
                         // Which settings the panels on the right are editing.
@@ -1355,10 +1431,8 @@ impl App {
                                 };
                                 ui.scope(|ui| {
                                     ui.set_width(half);
-                                    if theme::button(ui, "Communs", kind(!self.individual), true)
-                                        .on_hover_text(
-                                            "Les réglages s’appliquent à toutes les images",
-                                        )
+                                    if theme::button(ui, t("Common"), kind(!self.individual), true)
+                                        .on_hover_text(t("Settings apply to every image"))
                                         .clicked()
                                     {
                                         self.individual = false;
@@ -1369,11 +1443,11 @@ impl App {
                                     ui.add_enabled_ui(self.selected.is_some(), |ui| {
                                         if theme::button(
                                             ui,
-                                            "Cette image",
+                                            t("This image"),
                                             kind(self.individual),
                                             true,
                                         )
-                                        .on_hover_text("Exceptions propres à l’image sélectionnée")
+                                        .on_hover_text(t("Exceptions for the selected image only"))
                                         .clicked()
                                         {
                                             self.individual = true;
@@ -1386,7 +1460,7 @@ impl App {
                             theme::one_cell(ui, |ui| {
                                 if theme::button(
                                     ui,
-                                    "Revenir aux réglages communs",
+                                    t("Back to common settings"),
                                     theme::ButtonKind::Plain,
                                     true,
                                 )
@@ -1476,9 +1550,9 @@ impl App {
                                         max_w,
                                         2,
                                     );
-                                    let mut status = e.status.clone();
+                                    let mut status = e.status.text();
                                     if !e.overrides.0.is_empty() {
-                                        status.push_str(" · réglages individuels");
+                                        status.push_str(t(" · individual settings"));
                                     }
                                     theme::truncated_text(
                                         ui.painter(),
@@ -1536,7 +1610,7 @@ impl App {
                             ui.painter().text(
                                 list_rect.center(),
                                 Align2::CENTER_CENTER,
-                                "Déposez des images ici",
+                                t("Drop images here"),
                                 FontId::proportional(theme::BODY),
                                 theme::LESS_LIGHT_GRAY,
                             );
@@ -1591,14 +1665,14 @@ impl App {
         let ctx = ui.ctx().clone();
         theme::one_cell(ui, |ui| {
             ui.spacing_mut().item_spacing.y = 6.;
-            if theme::button(ui, "Dossier de sortie…", theme::ButtonKind::Plain, true).clicked() {
+            if theme::button(ui, t("Output folder…"), theme::ButtonKind::Plain, true).clicked() {
                 self.dialog(2, &ctx);
             }
             let path = self
                 .output
                 .as_ref()
                 .map(|p| p.display().to_string())
-                .unwrap_or_else(|| "Aucun dossier sélectionné".into());
+                .unwrap_or_else(|| t("No folder selected").into());
             ui.add(
                 egui::Label::new(
                     egui::RichText::new(path)
@@ -1622,15 +1696,16 @@ impl App {
                     theme::PINK,
                 );
                 ui.label(
-                    egui::RichText::new(format!(
-                        "{} / {} fichiers · réglages figés au lancement",
-                        self.done, self.total
+                    egui::RichText::new(tr!(
+                        "{} / {} files · settings frozen at start",
+                        self.done,
+                        self.total
                     ))
                     .size(theme::SMALL),
                 );
-                if theme::button(ui, "Annuler le lot", theme::ButtonKind::Plain, true).clicked() {
+                if theme::button(ui, t("Cancel batch"), theme::ButtonKind::Plain, true).clicked() {
                     self.cancel.store(true, Ordering::Relaxed);
-                    self.set_message("Annulation demandée ; attente du codec courant…");
+                    self.set_message(t("Cancelling; waiting for the current codec…"));
                 }
             } else {
                 ui.horizontal(|ui| {
@@ -1639,10 +1714,8 @@ impl App {
                     ui.scope(|ui| {
                         ui.set_width(half);
                         ui.add_enabled_ui(self.selected.is_some(), |ui| {
-                            if theme::button(ui, "Exporter", theme::ButtonKind::Plain, true)
-                                .on_hover_text(
-                                    "Écrit l’image sélectionnée dans le dossier de sortie",
-                                )
+                            if theme::button(ui, t("Export"), theme::ButtonKind::Plain, true)
+                                .on_hover_text(t("Writes the selected image to the output folder"))
                                 .clicked()
                             {
                                 self.start(false);
@@ -1654,7 +1727,7 @@ impl App {
                         ui.add_enabled_ui(!self.entries.is_empty(), |ui| {
                             if theme::button(
                                 ui,
-                                "Convertir le lot",
+                                t("Convert batch"),
                                 theme::ButtonKind::Accent(theme::HOT_PINK),
                                 true,
                             )
@@ -1708,6 +1781,36 @@ impl App {
                     });
             });
     }
+    /// The language dropdown, listing the languages this system can display.
+    fn language_picker(&mut self, ui: &mut egui::Ui) {
+        let current = squoosh_i18n::lang();
+        let (mut open, mut chosen) = (false, None);
+        let fonts = &mut self.fonts;
+        theme::select(ui, "language", current.name(), false, |ui| {
+            open = true;
+            for &lang in Lang::ALL {
+                if fonts.available(lang)
+                    && ui
+                        .selectable_label(lang == current, lang.name())
+                        .on_hover_text(lang.english_name())
+                        .clicked()
+                {
+                    chosen = Some(lang);
+                }
+            }
+        });
+        let ctx = ui.ctx().clone();
+        if open && !self.all_fonts {
+            // Every name in the list needs its own script.
+            self.all_fonts = true;
+            self.fonts.install(&ctx, current, true);
+        }
+        if let Some(lang) = chosen.filter(|&l| l != current) {
+            squoosh_i18n::set_lang(lang);
+            save_language(lang);
+            self.fonts.install(&ctx, lang, self.all_fonts);
+        }
+    }
     /// The blob button in the top-left corner (`.back` in the web app).
     fn blob_button(&mut self, ctx: &egui::Context, screen: Rect) {
         egui::Area::new(Id::new("drawer-blob"))
@@ -1716,7 +1819,7 @@ impl App {
             .show(ctx, |ui| {
                 let icon = if self.drawer { Icon::Close } else { Icon::Menu };
                 if theme::blob_button(ui, 58., icon, theme::HOT_PINK)
-                    .on_hover_text("Liste des images, dossier de sortie et conversion par lot")
+                    .on_hover_text(t("Image list, output folder and batch conversion"))
                     .clicked()
                 {
                     self.drawer = !self.drawer;
@@ -1761,7 +1864,7 @@ impl App {
         ui.painter().text(
             Pos2::new(rect.center().x, center.y - blob_size / 2. - 56.),
             Align2::CENTER_CENTER,
-            "Compression d’images locale · hors ligne",
+            t("Local image compression · offline"),
             FontId::proportional(theme::BODY),
             theme::DIM_TEXT,
         );
@@ -1775,11 +1878,11 @@ impl App {
             ui.painter(),
             center - vec2(0., 14.),
             Align2::CENTER_CENTER,
-            "Déposez vos images ici",
+            t("Drop your images here"),
             FontId::proportional(theme::BODY * 1.25),
             theme::WHITE,
         );
-        let labels = ["Sélectionner des images", "Sélectionner un dossier"];
+        let labels = [t("Select images"), t("Select a folder")];
         let buttons_width: f32 = labels
             .iter()
             .map(|t| {
@@ -1818,11 +1921,18 @@ impl App {
             };
             theme::checkbox(ui, &mut self.recursive, intro_theme);
             ui.label(
-                egui::RichText::new("Inclure les sous-dossiers")
+                egui::RichText::new(t("Include subfolders"))
                     .size(theme::BODY)
                     .color(theme::WHITE),
             );
         });
+        egui::Area::new(Id::new("intro-language"))
+            .order(egui::Order::Foreground)
+            .anchor(Align2::RIGHT_TOP, vec2(-16., 16.))
+            .show(&ctx, |ui| {
+                ui.set_width(190.);
+                self.language_picker(ui);
+            });
         if !self.message.is_empty() {
             ui.painter().text(
                 Pos2::new(rect.center().x, rect.bottom() - 24.),
@@ -1951,6 +2061,8 @@ impl eframe::App for App {
                 6.,
             ));
         }
+        #[cfg(feature = "screenshot")]
+        self.capture(&ctx);
     }
 }
 impl Drop for App {
@@ -1968,6 +2080,7 @@ fn main() -> eframe::Result<()> {
         // SAFETY: nothing else runs yet, so no thread reads the environment.
         unsafe { std::env::remove_var("WAYLAND_DISPLAY") };
     }
+    squoosh_i18n::set_lang(initial_language());
     let paths: Vec<PathBuf> = std::env::args_os().skip(1).map(PathBuf::from).collect();
     if paths.iter().any(|p| p == std::path::Path::new("--version")) {
         println!("Squoosh Desktop {}", env!("CARGO_PKG_VERSION"));

@@ -1,91 +1,91 @@
-# Correspondance des réglages Squoosh → Rust
+# Squoosh → Rust settings mapping
 
-Le registre `codecs/options.json` définit les valeurs initiales et les bornes partagées par l’interface et le moteur. Les noms source sont conservés. Toutes les options sont transmises aux codecs natifs ; `use_delta_palette` est réservé/inopérant dans libwebp et reste visible, désactivé et documenté.
+The `codecs/options.json` registry defines the defaults, bounds and English labels shared by the interface and the engine; the labels are translated in `i18n/locales/`. Source option names are kept as in Squoosh. Every option is passed to the native codecs; `use_delta_palette` is reserved and has no effect in libwebp, so it stays visible, disabled and documented.
 
 ## JPEG
 
-| Option source | Libellé | Défaut | Bornes |
-|---|---|---:|---|
-| `quality` | Qualité | 75 | 0–100 |
-| `baseline` | JPEG de base | 0 | 0–1 |
-| `arithmetic` | Codage arithmétique | 0 | 0–1 |
-| `progressive` | Progressif | 1 | 0–1 |
-| `optimize_coding` | Optimiser le codage | 1 | 0–1 |
-| `smoothing` | Lissage | 0 | 0–100 |
-| `color_space` | Espace couleur | 3 | 1–3 |
-| `quant_table` | Table de quantification | 3 | 0–8 |
-| `trellis_multipass` | Trellis multipasse | 0 | 0–1 |
-| `trellis_opt_zero` | Optimiser les zéros | 0 | 0–1 |
-| `trellis_opt_table` | Optimiser la table | 0 | 0–1 |
-| `trellis_loops` | Passes trellis | 1 | 1–50 |
-| `auto_subsample` | Sous-échantillonnage automatique | 1 | 0–1 |
-| `chroma_subsample` | Facteur chromatique | 2 | 1–4 |
-| `separate_chroma_quality` | Qualité chromatique distincte | 0 | 0–1 |
-| `chroma_quality` | Qualité chromatique | 75 | 0–100 |
+| Source option | Label | Default | Range | Choices |
+|---|---|---:|---|---|
+| `quality` | Quality | 75 | 0–100 |  |
+| `baseline` | Baseline JPEG | 0 | 0–1 |  |
+| `arithmetic` | Arithmetic coding | 0 | 0–1 |  |
+| `progressive` | Progressive rendering | 1 | 0–1 |  |
+| `optimize_coding` | Optimize Huffman table | 1 | 0–1 |  |
+| `smoothing` | Smoothing | 0 | 0–100 |  |
+| `color_space` | Channels | 3 | 1–3 | 1 = Grayscale, 2 = RGB, 3 = YCbCr |
+| `quant_table` | Quantization table | 3 | 0–8 | 0 = JPEG Annex K, 1 = Flat, 2 = MSSIM-tuned Kodak, 3 = ImageMagick, 4 = PSNR-HVS-M-tuned Kodak, 5 = Klein et al, 6 = Watson et al, 7 = Ahumada et al, 8 = Peterson et al |
+| `trellis_multipass` | Trellis multipass | 0 | 0–1 |  |
+| `trellis_opt_zero` | Optimize zero block runs | 0 | 0–1 |  |
+| `trellis_opt_table` | Optimize after trellis quantization | 0 | 0–1 |  |
+| `trellis_loops` | Trellis quantization passes | 1 | 1–50 |  |
+| `auto_subsample` | Auto subsample chroma | 1 | 0–1 |  |
+| `chroma_subsample` | Subsample chroma by | 2 | 1–4 |  |
+| `separate_chroma_quality` | Separate chroma quality | 0 | 0–1 |  |
+| `chroma_quality` | Chroma quality | 75 | 0–100 |  |
 
 ## PNG
 
-| Option source | Libellé | Défaut | Bornes |
-|---|---|---:|---|
-| `level` | Niveau d’optimisation | 2 | 0–6 |
-| `interlace` | Entrelacement | 0 | 0–1 |
+| Source option | Label | Default | Range | Choices |
+|---|---|---:|---|---|
+| `level` | Optimization level | 2 | 0–6 |  |
+| `interlace` | Interlace | 0 | 0–1 |  |
 
 ## WEBP
 
-| Option source | Libellé | Défaut | Bornes |
-|---|---|---:|---|
-| `quality` | Qualité | 75 | 0–100 |
-| `target_size` | Taille cible (octets) | 0 | 0–2147483647 |
-| `target_PSNR` | PSNR cible | 0 | 0–100 |
-| `method` | Effort | 4 | 0–6 |
-| `sns_strength` | Mise en forme du bruit | 50 | 0–100 |
-| `filter_strength` | Force du filtre | 60 | 0–100 |
-| `filter_sharpness` | Netteté du filtre | 0 | 0–7 |
-| `filter_type` | Filtre fort | 1 | 0–1 |
-| `partitions` | Partitions | 0 | 0–3 |
-| `segments` | Segments | 4 | 1–4 |
-| `pass` | Passes | 1 | 1–10 |
-| `show_compressed` | Reconstruction compressée | 0 | 0–1 |
-| `preprocessing` | Prétraitement | 0 | 0–2 |
-| `autofilter` | Filtre automatique | 0 | 0–1 |
-| `partition_limit` | Limite de partition | 0 | 0–100 |
-| `alpha_compression` | Compresser l’alpha | 1 | 0–1 |
-| `alpha_filtering` | Filtrage alpha | 1 | 0–2 |
-| `alpha_quality` | Qualité alpha | 100 | 0–100 |
-| `lossless` | Sans perte | 0 | 0–1 |
-| `exact` | Préserver les couleurs transparentes | 0 | 0–1 |
-| `image_hint` | Type d’image | 0 | 0–3 |
-| `emulate_jpeg_size` | Imiter la taille JPEG | 0 | 0–1 |
-| `thread_level` | Multithread | 0 | 0–1 |
-| `low_memory` | Mémoire réduite | 0 | 0–1 |
-| `near_lossless` | Fidélité presque sans perte | 100 | 0–100 |
-| `use_delta_palette` | Palette delta (réservé par libwebp) | 0 | 0–1 |
-| `use_sharp_yuv` | Sharp YUV | 0 | 0–1 |
+| Source option | Label | Default | Range | Choices |
+|---|---|---:|---|---|
+| `quality` | Quality | 75 | 0–100 |  |
+| `target_size` | Target size (bytes) | 0 | 0–2147483647 |  |
+| `target_PSNR` | Target PSNR | 0 | 0–100 |  |
+| `method` | Effort | 4 | 0–6 |  |
+| `sns_strength` | Spatial noise shaping | 50 | 0–100 |  |
+| `filter_strength` | Filter strength | 60 | 0–100 |  |
+| `filter_sharpness` | Filter sharpness | 0 | 0–7 |  |
+| `filter_type` | Strong filter | 1 | 0–1 |  |
+| `partitions` | Partitions | 0 | 0–3 |  |
+| `segments` | Segments | 4 | 1–4 |  |
+| `pass` | Passes | 1 | 1–10 |  |
+| `show_compressed` | Show compressed | 0 | 0–1 |  |
+| `preprocessing` | Preprocessing | 0 | 0–2 | 0 = None, 1 = Segment smoothing, 2 = Pseudo-random dithering |
+| `autofilter` | Auto adjust filter strength | 0 | 0–1 |  |
+| `partition_limit` | Partition quality limit | 0 | 0–100 |  |
+| `alpha_compression` | Compress alpha | 1 | 0–1 |  |
+| `alpha_filtering` | Alpha filtering | 1 | 0–2 |  |
+| `alpha_quality` | Alpha quality | 100 | 0–100 |  |
+| `lossless` | Lossless | 0 | 0–1 |  |
+| `exact` | Preserve transparent data | 0 | 0–1 |  |
+| `image_hint` | Image type | 0 | 0–3 | 0 = Default, 1 = Picture, 2 = Photo, 3 = Graph |
+| `emulate_jpeg_size` | Emulate JPEG size | 0 | 0–1 |  |
+| `thread_level` | Multithreading | 0 | 0–1 |  |
+| `low_memory` | Low memory | 0 | 0–1 |  |
+| `near_lossless` | Near-lossless fidelity | 100 | 0–100 |  |
+| `use_delta_palette` | Delta palette (reserved by libwebp) | 0 | 0–1 |  |
+| `use_sharp_yuv` | Sharp YUV | 0 | 0–1 |  |
 
 ## AVIF
 
-| Option source | Libellé | Défaut | Bornes |
-|---|---|---:|---|
-| `quality` | Qualité | 50 | 0–100 |
-| `qualityAlpha` | Qualité alpha (−1 : liée) | -1 | -1–100 |
-| `denoiseLevel` | Débruitage | 0 | 0–50 |
-| `tileColsLog2` | Colonnes de tuiles (log₂) | 0 | 0–6 |
-| `tileRowsLog2` | Lignes de tuiles (log₂) | 0 | 0–6 |
-| `speed` | Vitesse | 6 | 0–10 |
-| `subsample` | Sous-échantillonnage | 1 | 0–3 |
-| `chromaDeltaQ` | Quantification chromatique distincte | 0 | 0–1 |
-| `sharpness` | Netteté | 0 | 0–7 |
-| `tune` | Optimisation | 0 | 0–2 |
-| `enableSharpYUV` | Sharp YUV | 0 | 0–1 |
+| Source option | Label | Default | Range | Choices |
+|---|---|---:|---|---|
+| `quality` | Quality | 50 | 0–100 |  |
+| `qualityAlpha` | Alpha quality (−1: linked) | -1 | -1–100 |  |
+| `denoiseLevel` | Noise synthesis | 0 | 0–50 |  |
+| `tileColsLog2` | Log2 of tile columns | 0 | 0–6 |  |
+| `tileRowsLog2` | Log2 of tile rows | 0 | 0–6 |  |
+| `speed` | Speed | 6 | 0–10 |  |
+| `subsample` | Subsample chroma | 1 | 0–3 | 0 = 4:0:0, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4 |
+| `chromaDeltaQ` | Extra chroma compression | 0 | 0–1 |  |
+| `sharpness` | Sharpness | 0 | 0–7 |  |
+| `tune` | Tuning | 0 | 0–2 | 0 = Auto, 1 = PSNR, 2 = SSIM |
+| `enableSharpYUV` | Sharp YUV | 0 | 0–1 |  |
 
-## Contrôles dérivés et traitements
+## Derived controls and processing
 
-- WebP : préréglages sans perte 0–9 → couples méthode/qualité identiques au code TypeScript ; perte légère = 100 − near_lossless ; netteté affichée = 7 − filter_sharpness.
-- AVIF : effort = 10 − speed ; sans perte → qualité couleur/alpha 100 et 4:4:4 ; qualité alpha liée → −1.
-- JPEG : baseline désactive progressif ; arithmétique désactive optimisation Huffman ; sous-échantillonnage et qualité chromatique ne s’appliquent qu’en YCbCr ; trellis zéro dépend du multipasse.
-- Rotation commune aux deux côtés, 0/90/180/270°.
-- Redimensionnement par côté : dimensions, proportions verrouillées, étirement ou recadrage central (le mode source nommé contain effectue un recadrage), prémultiplication alpha, RGB linéaire.
-- Filtres : triangle, Catmull-Rom, Mitchell, Lanczos3, HQX (préagrandissement 2/3/4× puis Catmull-Rom), vectoriel SVG. Comme sur le web, sélectionner une image SVG choisit le filtre vectoriel et une image matricielle un filtre matriciel ; dans un lot, une image matricielle réglée en vectoriel est redimensionnée en Lanczos3.
-- Filtres navigateur : pixelated → voisin le plus proche ; low → triangle ; medium → Catmull-Rom ; high → Lanczos3. Ces correspondances ne reproduisent pas les pixels propres à chaque navigateur.
-- Palette : 2–256 couleurs, tramage 0–1, mode ZX par blocs de 8×8, deux couleurs compatibles par bloc.
-- Les entrées JPEG/PNG du navigateur deviennent des alias du format natif correspondant ; les codecs de sortie hors JPEG/PNG/WebP/AVIF sont exclus conformément au périmètre.
+- **WebP**: the lossless presets 0–9 map to the same method/quality pairs as the TypeScript code; *slight loss* = 100 − `near_lossless`; displayed *filter smoothing* = 7 − `filter_sharpness`.
+- **AVIF**: *effort* = 10 − `speed`; lossless sets color and alpha quality to 100 and 4:4:4; linked alpha quality is −1.
+- **JPEG**: baseline disables progressive; arithmetic coding disables Huffman optimization; chroma subsampling and chroma quality only apply to YCbCr; *optimize zero block runs* requires trellis multipass.
+- **Rotation** is shared by both sides: 0/90/180/270°.
+- **Resize** per side: dimensions, locked aspect ratio, stretch or center crop (the source mode named *contain* performs a crop), alpha premultiplication, linear RGB.
+- **Filters**: triangle, Catmull-Rom, Mitchell, Lanczos3, HQX (2/3/4× pre-upscale, then Catmull-Rom), SVG vector. As on the web, selecting an SVG image picks the vector filter and a raster image picks a raster filter; in a batch, a raster image set to vector is resized with Lanczos3.
+- **Browser filters**: pixelated → nearest neighbor; low → triangle; medium → Catmull-Rom; high → Lanczos3. These mappings do not reproduce the exact pixels of each browser.
+- **Palette**: 2–256 colors, dithering 0–1, ZX mode on 8×8 blocks with two compatible colors per block.
+- Browser JPEG/PNG inputs become aliases of the matching native format; output codecs other than JPEG/PNG/WebP/AVIF are out of scope.
