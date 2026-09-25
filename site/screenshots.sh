@@ -8,7 +8,7 @@ out=site/assets/screenshots
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$out"
-for name in editor welcome batch; do
+for name in editor welcome batch editor-ja; do
   for width in 740 1110 1480; do
     magick "docs/screenshots/$name.webp" -resize "${width}x" "$tmp/$name.png"
     # 4:4:4 keeps the coloured interface text sharp.

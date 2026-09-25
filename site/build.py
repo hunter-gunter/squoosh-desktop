@@ -32,11 +32,16 @@ CYRILLIC = {"ru", "uk"}
 CJK = {"zh-CN", "zh-TW", "ja", "ko"}
 CODECS = ["Rust", "MozJPEG", "OxiPNG", "WebP", "AVIF", "Lanczos3", "Mitchell", "Catmull-Rom",
           "HQX", "Dithering", "Lossless", "Batch"]
+# FAQ entries: q1/a1 … q8/a8 in every locale.
+FAQ = range(1, 9)
+# Comparison rows c1 … c6: (squoosh.app, Squoosh Desktop).
+COMPARE = [(True, True), (False, True), (False, True), (False, True), (False, True), (True, True)]
 
 # Screenshot widths made by site/screenshots.sh, and the width each one takes on the page.
 WIDTHS = (740, 1110, 1480)
 HERO_SIZES = "(max-width: 960px) calc(100vw - 38px), min(620px, 52vw)"
 SHOT_SIZES = "(max-width: 640px) calc(100vw - 38px), (max-width: 1192px) calc(50vw - 38px), 560px"
+BATCH_SIZES = "(max-width: 1192px) calc(100vw - 38px), 1160px"
 
 ICON_DOWNLOAD = ('<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" '
                  'stroke-width="3" stroke-linecap="square" d="M12 3v12m-6-6 6 6 6-6M4 21h16"/></svg>')
@@ -136,6 +141,7 @@ def json_ld(t, code, locales, version, base_url, dl):
         "image": base_url + "assets/icon-512.png",
         "screenshot": [base_url + f"assets/screenshots/{name}-{WIDTHS[-1]}.webp" for name in ("editor", "welcome", "batch")],
         "featureList": [t[f"f{i}_title"] + ": " + t[f"f{i}_text"] for i in range(1, 5)]
+                       + [t[f"b{i}_title"] + ": " + t[f"b{i}_text"] for i in range(1, 7)]
                        + [t[f"r{i}_title"] + ": " + t[f"r{i}_text"] for i in range(1, 5)],
         "keywords": "Squoosh, Rust, image compressor, AVIF, WebP, MozJPEG, OxiPNG, offline, batch",
         "inLanguage": LANGS,
@@ -162,7 +168,7 @@ def json_ld(t, code, locales, version, base_url, dl):
         "@type": "FAQPage",
         "inLanguage": code,
         "mainEntity": [{"@type": "Question", "name": t[f"q{i}"],
-                        "acceptedAnswer": {"@type": "Answer", "text": t[f"a{i}"]}} for i in range(1, 5)],
+                        "acceptedAnswer": {"@type": "Answer", "text": t[f"a{i}"]}} for i in FAQ],
     }
     return "\n".join(
         '<script type="application/ld+json">' + json.dumps(data, ensure_ascii=False).replace("</", "<\\/") + "</script>"
@@ -195,7 +201,16 @@ def render(code, locales, version, base_url):
         f'<p>{e(t[f"f{i}_text"])}</p></li>' for i in range(1, 5))
     faq = "\n".join(
         f'<details{" open" if i == 1 else ""}><summary>{e(t[f"q{i}"])}</summary><p>{e(t[f"a{i}"])}</p></details>'
-        for i in range(1, 5))
+        for i in FAQ)
+    checks = "\n".join(
+        f'<li><h3>{e(t[f"b{i}_title"])}</h3><p>{e(t[f"b{i}_text"])}</p></li>' for i in range(1, 7))
+
+    def mark(yes):
+        sign, label = ("✓", t["compare_yes"]) if yes else ("—", t["compare_no"])
+        return f'<span class="{"yes" if yes else "no"}" aria-hidden="true">{sign}</span><span class="sr">{e(label)}</span>'
+    compare = "\n".join(
+        f'<tr><th scope="row">{e(t[f"c{i}"])}</th><td>{mark(web)}</td><td class="us">{mark(desktop)}</td></tr>'
+        for i, (web, desktop) in enumerate(COMPARE, 1))
     stats = "\n".join(
         f'<li><b>{e(t[f"r{i}_value"])}</b><h3>{e(t[f"r{i}_title"])}</h3><p>{e(t[f"r{i}_text"])}</p></li>'
         for i in range(1, 5))
@@ -286,6 +301,32 @@ def render(code, locales, version, base_url):
     </ul>
   </section>
 
+  <section class="wrap" aria-labelledby="batch">
+    <div class="section-head">
+      <h2 id="batch">{e(t["batch_title"])}</h2>
+      <p>{e(t["batch_intro"])}</p>
+    </div>
+    <div class="batch">
+      <figure class="window">
+        {picture(prefix, "batch", t["batch_alt"], BATCH_SIZES)}
+        <figcaption>{e(t["batch_caption"])}</figcaption>
+      </figure>
+      <ul class="checks">
+{checks}
+      </ul>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="compare">
+    <h2 id="compare">{e(t["compare_title"])}</h2>
+    <table class="compare">
+      <thead><tr><th scope="col">{e(t["compare_feature"])}</th><th scope="col">squoosh.app</th><th scope="col" class="us">Squoosh Desktop</th></tr></thead>
+      <tbody>
+{compare}
+      </tbody>
+    </table>
+  </section>
+
   <section class="rust" aria-labelledby="rust">
     <div class="wrap">
       <div class="rust-head">
@@ -309,8 +350,8 @@ def render(code, locales, version, base_url):
         <figcaption>{e(t["welcome_caption"])}</figcaption>
       </figure>
       <figure>
-        {picture(prefix, "batch", t["batch_alt"], SHOT_SIZES)}
-        <figcaption>{e(t["batch_caption"])}</figcaption>
+        {picture(prefix, "editor-ja", t["langs_alt"], SHOT_SIZES)}
+        <figcaption>{e(t["langs_caption"])}</figcaption>
       </figure>
     </div>
   </section>
@@ -353,9 +394,13 @@ def sitemap(base_url, today):
 
 
 def llms_txt(t, locales, version, base_url, dl):
-    faq = "\n".join(f"- **{t[f'q{i}']}** {t[f'a{i}']}" for i in range(1, 5))
+    faq = "\n".join(f"- **{t[f'q{i}']}** {t[f'a{i}']}" for i in FAQ)
     features = "\n".join(f"- **{t[f'f{i}_title']}**: {t[f'f{i}_text']}" for i in range(1, 5))
     rust = "\n".join(f"- **{t[f'r{i}_title']}**: {t[f'r{i}_text']}" for i in range(1, 5))
+    batch = "\n".join(f"- **{t[f'b{i}_title']}**: {t[f'b{i}_text']}" for i in range(1, 7))
+    yes_no = {True: t["compare_yes"], False: t["compare_no"]}
+    compare = "\n".join(f"| {t[f'c{i}']} | {yes_no[web]} | {yes_no[desktop]} |"
+                        for i, (web, desktop) in enumerate(COMPARE, 1))
     languages = ", ".join(f"{locales[c]['lang_name']} ({base_url + slug(c)})" for c in LANGS)
     return f"""# Squoosh Desktop
 
@@ -366,6 +411,18 @@ Squoosh Desktop is a native Rust port of Squoosh (squoosh.app, by Google Chrome 
 ## Features
 
 {features}
+
+## {t["batch_title"]}
+
+{t["batch_intro"]}
+
+{batch}
+
+## {t["compare_title"]}
+
+| {t["compare_feature"]} | squoosh.app | Squoosh Desktop |
+|---|---|---|
+{compare}
 
 ## Why Rust
 
