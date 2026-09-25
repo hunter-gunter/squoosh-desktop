@@ -13,12 +13,13 @@ A native Rust port of [Squoosh](https://github.com/GoogleChromeLabs/squoosh) for
 [![Latest release](https://img.shields.io/github/v/release/hunter-gunter/squoosh-desktop?include_prereleases&label=release&color=ff3385)](https://github.com/hunter-gunter/squoosh-desktop/releases)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-5fb4e4)](LICENSE)
 [![Rust 1.95+](https://img.shields.io/badge/rust-1.95%2B-dea584?logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![AUR version](https://img.shields.io/aur/version/squoosh-desktop?logo=archlinux&logoColor=white&label=AUR&color=1793D1)](https://aur.archlinux.org/packages/squoosh-desktop)
 [![17 languages](https://img.shields.io/badge/i18n-17%20languages-8a2be2)](#languages)
 
 [![Download for Windows](https://img.shields.io/badge/Windows-Download-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/hunter-gunter/squoosh-desktop/releases/latest)
 [![Download for Debian](https://img.shields.io/badge/Debian%20.deb-Download-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://github.com/hunter-gunter/squoosh-desktop/releases/latest)
 [![Download AppImage](https://img.shields.io/badge/AppImage-Download-ff0066?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/hunter-gunter/squoosh-desktop/releases/latest)
-[![Build for Arch Linux](https://img.shields.io/badge/Arch%20Linux-PKGBUILD-1793D1?style=for-the-badge&logo=archlinux&logoColor=white)](#packaging)
+[![Install from the AUR](https://img.shields.io/badge/Arch%20Linux-AUR-1793D1?style=for-the-badge&logo=archlinux&logoColor=white)](https://aur.archlinux.org/packages/squoosh-desktop)
 
 <img src="docs/screenshots/editor.webp" alt="Squoosh Desktop comparing the original image with an AVIF version 81% smaller" width="100%">
 
@@ -61,7 +62,7 @@ A native Rust port of [Squoosh](https://github.com/GoogleChromeLabs/squoosh) for
 
 ## Install
 
-Ready-made packages are attached to every [GitHub release](https://github.com/hunter-gunter/squoosh-desktop/releases), with their SHA-256 checksums.
+Ready-made packages are attached to every [GitHub release](https://github.com/hunter-gunter/squoosh-desktop/releases), with their SHA-256 checksums. On Arch Linux, the app is in the [AUR](https://aur.archlinux.org/packages/squoosh-desktop).
 
 | Platform | Package | How to install |
 |---|---|---|
@@ -69,7 +70,7 @@ Ready-made packages are attached to every [GitHub release](https://github.com/hu
 | | `squoosh-desktop-<version>-windows-x64.zip` | Portable: unzip and run `squoosh-desktop.exe`. |
 | **Debian 13** | `squoosh-desktop_<version>_amd64.deb` | `sudo apt install ./squoosh-desktop_*_amd64.deb` |
 | **Any Linux** | `squoosh-desktop-<version>-x86_64.AppImage` | `chmod +x` it, then run it. |
-| **Arch Linux** | `PKGBUILD` + source archive | See [Packaging](#packaging). |
+| **Arch Linux** | [`squoosh-desktop`](https://aur.archlinux.org/packages/squoosh-desktop) in the AUR | `yay -S squoosh-desktop` (or `paru`, or `makepkg -si` from a clone of the AUR repository) |
 
 > [!NOTE]
 > The Windows binaries are not signed yet, so SmartScreen shows a warning on first launch.
@@ -235,7 +236,7 @@ The script downloads `linuxdeploy` and `appimagetool` (*continuous* builds) into
 <details>
 <summary><b>Arch Linux package</b></summary>
 
-Build the complete source archive and the Arch recipe with its checksum:
+The [AUR package](https://aur.archlinux.org/packages/squoosh-desktop) is built from [`packaging/aur/PKGBUILD`](packaging/aur/PKGBUILD), which downloads the tagged sources from GitHub. To build a package from the current checkout instead, build the complete source archive and the Arch recipe with its checksum:
 
 ```sh
 ./scripts/source.sh
@@ -244,7 +245,7 @@ makepkg -s
 sudo pacman -U squoosh-desktop-*-x86_64.pkg.tar.zst
 ```
 
-The recipe builds and tests from the local archive; nothing is published to the AUR.
+This recipe builds and tests from the local archive. After a release, update `pkgver` and `sha256sums` in `packaging/aur/PKGBUILD` (`updpkgsums`), regenerate `.SRCINFO` with `makepkg --printsrcinfo > .SRCINFO` and push both files to the AUR repository.
 
 </details>
 
@@ -314,7 +315,7 @@ The screenshots are served as AVIF with a WebP fallback, in three widths: after 
 | [`core/`](core) | Conversion pipeline, settings, job queue and tests |
 | [`codecs/`](codecs) | MozJPEG, OxiPNG, libwebp and libavif bindings, and the `options.json` registry |
 | [`i18n/`](i18n) | Languages, translation catalogs (`locales/`) and helpers shared by every crate |
-| [`packaging/`](packaging), [`scripts/`](scripts) | Arch recipe, `.desktop` file, Windows installer, package and AppImage builds |
+| [`packaging/`](packaging), [`scripts/`](scripts) | Arch recipes (local and AUR), `.desktop` file, Windows installer, package and AppImage builds |
 | [`docs/`](docs) | Settings mapping with Squoosh, and screenshots |
 | [`site/`](site) | Website generator, texts in 17 languages and assets |
 

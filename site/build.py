@@ -111,7 +111,7 @@ def downloads(version):
         "zip": f"{url}/squoosh-desktop-{version}-windows-x64.zip",
         "appimage": f"{url}/squoosh-desktop-{version}-x86_64.AppImage",
         "deb": f"{url}/squoosh-desktop_{version}_amd64.deb",
-        "arch": f"{url}/squoosh-desktop-{version.replace('-', '_')}-1-x86_64.pkg.tar.zst",
+        "arch": "https://aur.archlinux.org/packages/squoosh-desktop",
         "releases": f"{REPO}/releases",
     }
 
@@ -264,7 +264,7 @@ def render(code, locales, version, base_url):
       </div>
       <p class="also"><span>{e(t["also"])}</span>
         <a href="{dl["deb"]}">{icon("debian")}Debian .deb</a>
-        <a href="{dl["arch"]}">{icon("archlinux")}Arch Linux</a>
+        <a href="{dl["arch"]}">{icon("archlinux")}Arch Linux · AUR</a>
         <a href="{dl["zip"]}">{icon("windows")}{e(t["portable"])}</a>
         <a href="{dl["releases"]}">{ICON_GITHUB}{e(t["all_releases"])}</a>
       </p>
