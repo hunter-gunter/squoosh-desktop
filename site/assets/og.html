@@ -1,6 +1,8 @@
 <!doctype html>
-<!-- Source of og.png, the 1200x630 social preview. Regenerate from site/assets with:
-     chromium --headless=new --hide-scrollbars --window-size=1200,630 --screenshot=og.png og.html -->
+<!-- Source of og.png, the 1200x630 preview of the website, and of the 1280x640 social
+     preview of the GitHub repository (Settings > General > Social preview). From site/assets:
+     chromium --headless=new --hide-scrollbars --allow-file-access-from-files --window-size=1200,630 --screenshot=og.png og.html
+     chromium --headless=new --hide-scrollbars --allow-file-access-from-files --window-size=1280,640 --screenshot=../../docs/social-preview.png "og.html#github" -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -29,9 +31,13 @@
     background: #0d0d0d; color: #fffdf8; border: 4px solid #0d0d0d; box-shadow: 6px 6px 0 #f74c00;
     font: 800 24px 'Unbounded', sans-serif; transform: rotate(-1deg); }
   .rust img { width: 40px; height: 40px; padding: 4px; background: #f74c00; border-radius: 50%; }
+  .github { width: 1280px; height: 640px; }
+  .github .text { left: 76px; top: 40px; }
+  .github .shot { left: 700px; width: 660px; }
 </style>
 </head>
 <body>
+  <script>if (location.hash === "#github") document.body.className = "github";</script>
   <div class="text">
     <img class="logo" src="icon-192.png" alt="">
     <h1>Squoosh Desktop</h1>
